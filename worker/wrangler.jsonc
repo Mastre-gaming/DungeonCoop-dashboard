@@ -15,7 +15,7 @@
     // Les repos suivis : seuls leurs webhooks sont acceptés, et seuls leurs chemins sont lus avec le token.
     "DEPOTS": "Mastre-gaming/DungeonCoop,Mastre-gaming/DungeonCoop-dashboard",
     // La connexion GitHub du tableau de travail : le « Client ID » de l'OAuth App (public). Vide = pas de connexion.
-    "GITHUB_CLIENT_ID": "",
+    "GITHUB_CLIENT_ID": "Ov23liHi9ij2s55xMeSn",
     // Les pages vers lesquelles un token peut repartir après la connexion. * = les aperçus de branche.
     "PAGES": "https://dungeoncoop-dashboard.mastredev.workers.dev,https://*-dungeoncoop-dashboard.mastredev.workers.dev,http://localhost:8000"
   },
