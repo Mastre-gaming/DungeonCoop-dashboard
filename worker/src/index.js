@@ -1,7 +1,8 @@
 // Le Worker « en direct » du dashboard.
 //
 //   POST /webhook   GitHub y envoie chaque push, PR, relecture, issue… (signé avec WEBHOOK_SECRET)
-//   GET  /direct    les pages ouvertes s'y connectent (WebSocket) pour être prévenues tout de suite
+//   GET  /direct    les pages ouvertes s'y connectent (WebSocket) pour être prévenues tout de suite,
+//                   et pour la messagerie (avec le laissez-passer de l'entrée, vérifié avec MOT_DE_PASSE)
 //   GET  /api/…     lit l'API GitHub avec le token (5 000 appels/h) et un cache partagé par toutes les pages
 //   GET  /          l'état du Worker : token et secret présents, nombre de pages connectées
 //
@@ -11,6 +12,7 @@ import { DurableObject } from 'cloudflare:workers';
 import { Cache } from './cache.js';
 import { depotsDe, regle, regles } from './chemins.js';
 import { traduire } from './evenements.js';
+import { Messagerie } from './messagerie.js';
 import { signatureValide } from './signature.js';
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET', 'Access-Control-Max-Age': '86400' };
@@ -79,11 +81,27 @@ export class Salle extends DurableObject {
     this.attente = null;
     // Les pages envoient « ping » toutes les 30 s ; la réponse part sans réveiller la salle.
     ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'));
+
+    // La messagerie : les messages vivent dans la base SQLite de la salle (les 1 000 derniers).
+    const sql = ctx.storage.sql;
+    sql.exec('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, auteur TEXT NOT NULL, texte TEXT NOT NULL, t INTEGER NOT NULL)');
+    this.messagerie = new Messagerie({
+      secret: env.MOT_DE_PASSE,
+      stockage: {
+        ajouter: ({ auteur, texte, t }) => {
+          const { id } = sql.exec('INSERT INTO messages (auteur, texte, t) VALUES (?, ?, ?) RETURNING id', auteur, texte, t).one();
+          sql.exec('DELETE FROM messages WHERE id <= ?', id - 1000);
+          return id;
+        },
+        derniers: (n) => sql.exec('SELECT id, auteur, texte, t FROM messages ORDER BY id DESC LIMIT ?', n).toArray().reverse(),
+      },
+    });
   }
 
   async fetch() {
     const [client, serveur] = Object.values(new WebSocketPair());
     this.ctx.acceptWebSocket(serveur); // « hibernation » : une page connectée ne coûte rien tant que rien ne se passe
+    serveur.serializeAttachment({ equipe: false });
     return new Response(null, { status: 101, webSocket: client });
   }
 
@@ -122,13 +140,32 @@ export class Salle extends DurableObject {
       nom: 'dungeoncoop-direct',
       token: Boolean(this.env.GITHUB_TOKEN),
       secret: Boolean(this.env.WEBHOOK_SECRET),
+      messagerie: Boolean(this.env.MOT_DE_PASSE),
+      messages: this.ctx.storage.sql.exec('SELECT COUNT(*) AS n FROM messages').one().n,
       pagesConnectees: this.ctx.getWebSockets().length,
       depots: depotsDe(this.env),
       github: this.limite,
     };
   }
 
-  webSocketMessage() {} // « ping » est géré par l'auto-réponse ; les pages n'envoient rien d'autre
+  // « ping » est géré par l'auto-réponse ; le reste, c'est la messagerie.
+  async webSocketMessage(page, recu) {
+    if (typeof recu !== 'string' || recu.length > 4000) return;
+    const { attachement, envoyer, diffuser } = await this.messagerie.traiter(recu, page.deserializeAttachment() ?? {});
+    page.serializeAttachment(attachement);
+    for (const message of envoyer) page.send(JSON.stringify(message));
+    if (!diffuser.length) return;
+    // Seulement aux pages entrées avec le mot de passe.
+    const entrees = this.ctx.getWebSockets().filter((p) => p.deserializeAttachment()?.equipe);
+    for (const message of diffuser) {
+      const texte = JSON.stringify(message);
+      for (const autre of entrees) {
+        try {
+          autre.send(texte);
+        } catch {}
+      }
+    }
+  }
 
   webSocketClose(page, code, raison) {
     try {

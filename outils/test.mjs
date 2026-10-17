@@ -143,6 +143,41 @@ async function ouvrirOnglet(dt) {
   };
 }
 
+// Une connexion WebSocket au Worker, qui garde ce qu'elle reçoit.
+async function connexionWs(url) {
+  const socket = new WebSocket(url);
+  const recus = [];
+  const attentes = [];
+  socket.addEventListener('message', (e) => {
+    let m;
+    try {
+      m = JSON.parse(e.data);
+    } catch {
+      return;
+    }
+    recus.push(m);
+    for (const a of [...attentes]) if (a.condition(m)) a.ok(m);
+  });
+  await new Promise((ok, ko) => {
+    socket.addEventListener('open', ok);
+    socket.addEventListener('error', () => ko(new Error(`WebSocket injoignable : ${url}`)));
+  });
+  return {
+    recus,
+    envoyer: (objet) => socket.send(JSON.stringify(objet)),
+    attendre(condition, ms = 5000) {
+      const deja = recus.find(condition);
+      if (deja) return Promise.resolve(deja);
+      return new Promise((ok) => {
+        const attente = { condition, ok };
+        attentes.push(attente);
+        setTimeout(() => ok(null), ms);
+      });
+    },
+    fermer: () => socket.close(),
+  };
+}
+
 async function principal() {
   const serveur = await demarrer(0);
   const page = `http://127.0.0.1:${serveur.address().port}`;
@@ -175,6 +210,15 @@ async function principal() {
     console.log(`thème gardé : ${sombre ? 'ok' : 'raté'} · capture ${await onglet.capturer('theme-sombre-choisi')}`);
     await onglet.evaluer("localStorage.removeItem('dungeoncoop:theme')");
 
+    // Le panneau de la messagerie ouvert, sur bureau et sur téléphone (pour voir).
+    for (const [nom, vue] of [['messagerie', {}], ['messagerie-telephone', { largeur: 390, hauteur: 844 }]]) {
+      await onglet.aller(`${page}/?demo&moi=demo-brams`, vue);
+      await onglet.attendre('document.querySelector("#bulle-messages")');
+      await onglet.evaluer('document.querySelector("#bulle-messages").click(), true');
+      await pause(150);
+      console.log(`${nom} : capture ${await onglet.capturer(nom)}`);
+    }
+
     // 2. Les vraies données, sans vérification de contenu : aucun widget ne doit planter.
     if (option('--vrai')) {
       await onglet.aller(`${page}/?sans-direct`);
@@ -202,6 +246,43 @@ async function principal() {
         .catch(() => echecs.push('direct : la notification n’est pas arrivée en 5 s'));
       const faux = await fetch(`${direct}/webhook`, { method: 'POST', body: corps, headers: { 'X-GitHub-Event': 'ping', 'X-Hub-Signature-256': `sha256=${'0'.repeat(64)}` } });
       if (faux.status !== 401) echecs.push(`direct : un webhook mal signé reçoit ${faux.status} au lieu de 401`);
+
+      // La messagerie, si on donne le MOT_DE_PASSE du Worker (worker/.dev.vars).
+      const motDePasse = option('--mot-de-passe');
+      if (motDePasse) {
+        const { creerJeton } = await import('../worker/src/session.js');
+        const jeton = await creerJeton(motDePasse, 'Paul');
+        const adresseWs = `${direct.replace(/^http/, 'ws')}/direct`;
+        const a = await connexionWs(adresseWs);
+        const b = await connexionWs(adresseWs);
+        const c = await connexionWs(adresseWs);
+        a.envoyer({ type: 'jeton', jeton });
+        c.envoyer({ type: 'jeton', jeton: await creerJeton('pas-le-bon', 'Pirate') });
+        const bienvenue = await a.attendre((m) => m.type === 'bienvenue');
+        if (bienvenue?.nom !== 'Paul') echecs.push('messagerie : le bon laissez-passer n’ouvre pas la messagerie');
+        if (!(await c.attendre((m) => m.type === 'refuse'))) echecs.push('messagerie : un faux laissez-passer n’est pas refusé');
+        const texteNode = `Test depuis Node, vers la #12 (${Date.now()})`;
+        a.envoyer({ type: 'envoyer', ref: 't1', texte: texteNode });
+        const recu = await a.attendre((m) => m.type === 'message' && m.message.texte === texteNode);
+        if (recu?.message.auteur !== 'Paul') echecs.push('messagerie : le message n’est pas signé par le laissez-passer');
+        await pause(500);
+        if (b.recus.some((m) => m.type === 'message')) echecs.push('messagerie : une page sans mot de passe a reçu un message');
+        // La page, avec le même laissez-passer, voit le message et peut répondre.
+        await onglet.evaluer(`localStorage.setItem('dungeoncoop:jeton', ${JSON.stringify(jeton)}), true`);
+        await onglet.aller(`${page}/?direct=${encodeURIComponent(direct)}`);
+        await onglet.attendre('document.querySelector("#bulle-messages")');
+        await onglet.evaluer('document.querySelector("#bulle-messages").click(), true');
+        await onglet.attendre(`[...document.querySelectorAll('#messagerie .msg')].some((m) => m.textContent.includes(${JSON.stringify(texteNode)}))`, 10_000)
+          .catch(() => echecs.push('messagerie : la page ne montre pas le message envoyé depuis Node'));
+        const texteBrowser = `Réponse de la page (${Date.now()})`;
+        await onglet.evaluer(`(() => { const z = document.querySelector('#messagerie textarea'); z.value = ${JSON.stringify(texteBrowser)}; document.querySelector('#messagerie form').requestSubmit(); return true; })()`);
+        const reponse = await a.attendre((m) => m.type === 'message' && m.message.texte === texteBrowser, 5000);
+        if (reponse?.message.auteur !== 'Paul') echecs.push('messagerie : le message de la page n’arrive pas aux autres');
+        else console.log('messagerie : Node → page → Node, ok ; une page sans mot de passe ne reçoit rien');
+        console.log(`messagerie : capture ${await onglet.capturer('messagerie-direct')}`);
+        await onglet.evaluer("localStorage.removeItem('dungeoncoop:jeton'), true");
+        for (const w of [a, b, c]) w.fermer();
+      }
       console.log(`direct : capture ${await onglet.capturer('direct')}`);
     }
 

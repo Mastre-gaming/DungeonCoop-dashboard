@@ -14,6 +14,8 @@ Une seule page web pour toute l'équipe de [DungeonCoop](https://github.com/Mast
 | Avancée du projet | les jalons de `GAME_SPEC.md`, de D1 à M4, avec la part d'issues fermées |
 | Liens utiles | le repo, les docs, Sprite Painter, le lanceur… (`liens.json`) |
 | Sprite Painter | l'éditeur de persos de BABA, en ligne sur `/sprite-painter/` (derrière le mot de passe) |
+| Messages | la bulle 💬 en bas à gauche : des messages courts à l'équipe, en direct ; `#12` mène à l'issue ou la PR, `@nom` prévient la personne |
+| Thème | clair, auto ou sombre, en haut à droite |
 | Idées | les issues « Idée » rangées par jalon, puis par priorité et par votes 👍 |
 
 ## Comment ça marche
@@ -25,6 +27,7 @@ GitHub ──webhook──▶ Worker « direct » ──WebSocket──▶ les p
 ```
 
 - **Une porte devant la page.** Un petit Worker (`porte/`) passe devant chaque fichier : sans le mot de passe de l'équipe, on ne voit que l'écran d'entrée. Le mot de passe n'est jamais dans le repo (il est public) : c'est le secret Cloudflare `MOT_DE_PASSE`. Après l'entrée, le navigateur garde un laissez-passer signé 30 jours ; changer le mot de passe déconnecte tout le monde. Le nom tapé à l'entrée remplace « Je suis » : « Paul » est reconnu comme `PCrrfng` grâce à `equipe.json`.
+- **La messagerie** passe par le Worker direct, sur la même connexion que le direct. La page présente le laissez-passer de l'entrée ; le Worker le vérifie avec le même secret `MOT_DE_PASSE` et signe chaque message du nom tapé à l'entrée (une page ne peut pas écrire au nom d'un autre). Les 1 000 derniers messages sont gardés dans la base du Worker ; les 100 derniers s'affichent. Pour les longues discussions, il y a Discord.
 - **Les données restent dans GitHub.** La page les lit et les rassemble, elle n'en garde aucune. Pour agir (poster une idée, s'assigner, fusionner), les boutons ouvrent GitHub.
 - **En direct :** GitHub prévient le Worker à chaque événement (push, PR, relecture, issue, tests…). Le Worker vide son cache pour ce sujet et prévient les pages ouvertes, qui redessinent seulement les widgets concernés et affichent une notification.
 - **Sans le Worker**, la page lit GitHub elle-même : elle est à jour à l'ouverture, mais ne bouge plus toute seule, et GitHub limite à 60 appels par heure (d'où un cache de 5 minutes).
@@ -43,10 +46,13 @@ src/github.js              toutes les lectures de données (démo, Worker, ou Gi
 src/direct.js              la connexion en direct au Worker
 src/main.js                dessine les widgets et tient l'en-tête à jour
 src/theme.js               le réglage clair / auto / sombre, gardé dans le navigateur
+src/messagerie.js          la bulle 💬 et le panneau des messages
 src/widgets/*.js           un widget = un fichier
 src/test.js                les vérifications de ?test
 demo/donnees.js            des données inventées pour ?demo et ?test
 worker/                    le Worker « direct » (son propre package.json)
+worker/src/session.js      le laissez-passer, vérifié par la porte et par le Worker direct
+worker/src/messagerie.js   la messagerie, sans rien de Cloudflare (testée avec Node)
 outils/serveur.mjs         un serveur pour ouvrir la page sur ton ordi
 outils/test.mjs            le test sans écran (Chrome ou Edge), avec captures
 wrangler.jsonc             la publication de la page par Cloudflare
@@ -66,7 +72,7 @@ node outils/test.mjs             les 35 vérifications, et des captures dans cap
 
 Utile dans l'adresse : `?demo` (données inventées), `?sans-direct` (lire GitHub sans le Worker), `?direct=http://localhost:8787` (un Worker lancé sur ton ordi), `?moi=PCrrfng` (voir la page comme quelqu'un d'autre).
 
-**Le Worker sur ton ordi :** dans `worker/`, `npm install`, puis crée `worker/.dev.vars` avec la ligne `WEBHOOK_SECRET=un-secret-de-test` et lance `npm run dev`. Ensuite, `node outils/test.mjs --direct http://localhost:8787 --secret un-secret-de-test` envoie un faux webhook signé et vérifie que la page le montre. `npm test` dans `worker/` lance ses tests sans Cloudflare.
+**Le Worker sur ton ordi :** dans `worker/`, `npm install`, puis crée `worker/.dev.vars` avec deux lignes, `WEBHOOK_SECRET=un-secret-de-test` et `MOT_DE_PASSE=un-mot-de-passe-de-test`, et lance `npm run dev`. Ensuite, `node outils/test.mjs --direct http://localhost:8787 --secret un-secret-de-test --mot-de-passe un-mot-de-passe-de-test` envoie un faux webhook signé et vérifie que la page le montre, puis essaie la messagerie (laissez-passer bon et faux, messages dans les deux sens, une page sans mot de passe qui ne reçoit rien). `npm test` dans `worker/` lance ses tests sans Cloudflare.
 
 **La porte sur ton ordi :** `outils/serveur.mjs` sert la page sans porte. Pour l'essayer, crée `.dev.vars` à la racine avec `MOT_DE_PASSE=un-mot-de-passe-de-test`, puis `npx wrangler dev --port 8788 --persist-to ../.wrangler-dashboard` et ouvre http://localhost:8788. Le test de l'entrée : `CAPTURES=../captures-porte node outils/test.mjs --porte http://localhost:8788 --mot-de-passe un-mot-de-passe-de-test` (les captures vont hors du repo, sinon wrangler redémarre à chaque image).
 
@@ -87,12 +93,12 @@ Utile dans l'adresse : `?demo` (données inventées), `?sans-direct` (lire GitHu
 
 1. `npm install`, `npx wrangler login`, puis `npm run deploy`. Il est publié à `https://dungeoncoop-direct.mastredev.workers.dev`, l'adresse déjà mise dans `src/config.js`.
 2. **Le token GitHub, en lecture seule :** GitHub → *Settings* → *Developer settings* → *Fine-grained tokens* → *Generate new token*. *Repository access* : **Public repositories**, aucune permission. Puis `npx wrangler secret put GITHUB_TOKEN` et colle-le. Il ne va jamais dans un fichier.
-3. **Le secret des webhooks :** `npx wrangler secret put WEBHOOK_SECRET`, avec une longue chaîne aléatoire, la même qu'à l'étape 4.
+3. **Le secret des webhooks :** `npx wrangler secret put WEBHOOK_SECRET`, avec une longue chaîne aléatoire, la même qu'à l'étape 4. **Et le mot de passe**, pour la messagerie : `npx wrangler secret put MOT_DE_PASSE`, exactement le même que celui de la page.
 4. **Les webhooks**, sur le repo du jeu et sur celui-ci : *Settings* → *Webhooks* → *Add webhook*.
    - *Payload URL* : `https://dungeoncoop-direct.mastredev.workers.dev/webhook` · *Content type* : `application/json` · *Secret* : celui de l'étape 3.
    - *Let me select individual events* : Branch or tag creation, Branch or tag deletion, Check runs, Check suites, Issue comments, Issues, Labels, Milestones, Pull requests, Pull request reviews, Pushes, Statuses.
    - GitHub envoie aussitôt un « ping » : les pages ouvertes affichent « Webhook branché sur … ✔ ».
-5. **Vérifier :** `https://dungeoncoop-direct.mastredev.workers.dev/` doit dire `"token": true` et `"secret": true`, et compter les pages connectées.
+5. **Vérifier :** `https://dungeoncoop-direct.mastredev.workers.dev/` doit dire `"token": true`, `"secret": true` et `"messagerie": true`, et compter les pages connectées.
 
 Le plan gratuit suffit largement (100 000 requêtes par jour ; une page connectée ne coûte rien tant que rien ne se passe).
 

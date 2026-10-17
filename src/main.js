@@ -10,6 +10,7 @@ import { config } from './config.js';
 import * as github from './github.js';
 import { brancher } from './direct.js';
 import { installerTheme } from './theme.js';
+import { installerMessagerie } from './messagerie.js';
 import { el, lienExterne, nomDe, heure, tagDepot, normaliser } from './outils.js';
 import * as pullRequests from './widgets/pull-requests.js';
 import * as commits from './widgets/commits.js';
@@ -161,6 +162,7 @@ function dessinerChoixMoi() {
   choix.onchange = () => {
     etat.moi = choix.value;
     ecrireStockage(CLE_MOI, etat.moi);
+    messagerie?.majMoi(etat.moi);
     etat.pourToi.clear();
     dessinerPourToi();
     toutRendre();
@@ -227,6 +229,8 @@ function surMessageDirect(message) {
 
 // --- Démarrage -------------------------------------------------------------------------------
 
+let messagerie = null;
+
 async function demarrer() {
   installerTheme();
   if (github.modeDemo) {
@@ -246,14 +250,32 @@ async function demarrer() {
   dessinerChoixMoi();
   dessinerPourToi();
   dessinerEtat();
+
+  // La messagerie : le laissez-passer vient de l'entrée. Sur ton ordi, sans porte, on peut en poser un à la main
+  // dans localStorage (« dungeoncoop:jeton ») pour essayer avec un Worker lancé en local.
+  messagerie = installerMessagerie({
+    equipe: etat.equipe,
+    moi: etat.moi,
+    jeton: etat.session?.jeton ?? (github.modeDemo ? null : lireStockage('dungeoncoop:jeton')),
+    nomSession: etat.session?.nom ?? null,
+    disponible: github.modeDirect,
+    demo: github.modeDemo,
+    notifier,
+    messagesDemo: github.modeDemo ? await github.messagesDemo() : [],
+    avatarDe: (login) => (github.modeDemo ? null : `https://avatars.githubusercontent.com/${encodeURIComponent(login)}`),
+  });
+  window.__messagerie = messagerie; // pour les tests
+
   await toutRendre();
 
   if (github.modeDirect) {
-    brancher(github.adresseDirect, {
-      surMessage: surMessageDirect,
+    const liaison = brancher(github.adresseDirect, {
+      surMessage: (message) => (message.type === 'maj' ? surMessageDirect(message) : messagerie.recevoir(message)),
+      surOuverture: () => messagerie.connecte(liaison.envoyer),
       surEtat(nouvel, { reconnexion } = {}) {
         etat.direct = nouvel;
         dessinerEtat();
+        if (nouvel === 'hors-ligne') messagerie.deconnecte();
         if (nouvel === 'direct' && reconnexion) toutRendre(); // on a pu rater des messages pendant la coupure
       },
     });

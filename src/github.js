@@ -195,6 +195,10 @@ function donneesDemo() {
   return demo;
 }
 
+export async function messagesDemo() {
+  return structuredClone((await donneesDemo()).messages ?? []);
+}
+
 async function depuisDemo(chemin) {
   const reponse = (await donneesDemo()).api[chemin];
   if (reponse === undefined) throw erreurHttp(`Démo : pas de données pour ${chemin}`, 404);

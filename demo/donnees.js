@@ -106,6 +106,12 @@ export function donnees() {
 
   return {
     api,
+    // La messagerie (le Worker direct en vrai) : le nom de l'auteur est celui tapé à l'entrée.
+    messages: [
+      { id: 1, auteur: 'Ayla', texte: 'Je relis la #12 ce soir.', t: Date.parse(il(5)) },
+      { id: 2, auteur: 'Cerise', texte: 'Le chevalier a sa couronne : https://example.org/chevalier.png', t: Date.parse(il(2)) },
+      { id: 3, auteur: 'Dorn', texte: '@Brams tu as vu le conflit sur ta PR ?\n<b>pas du HTML</b>, juste du texte', t: Date.parse(il(0.5)) },
+    ],
     fichiers: { 'GAME_SPEC.md': GAME_SPEC },
     local: {
       'equipe.json': [
