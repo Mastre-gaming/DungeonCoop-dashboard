@@ -22,3 +22,6 @@ secrets/
 Thumbs.db
 desktop.ini
 *.log
+
+# Captures des tests (node outils/test.mjs)
+captures/

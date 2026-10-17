@@ -1,0 +1,12 @@
+# Ce que Cloudflare ne publie pas avec la page (même syntaxe que .gitignore)
+.git
+.github
+.gitignore
+.assetsignore
+.wrangler
+wrangler.jsonc
+worker
+outils
+captures
+node_modules
+*.md

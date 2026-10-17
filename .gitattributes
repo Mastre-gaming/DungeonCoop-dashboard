@@ -1,0 +1,3 @@
+# Fins de ligne LF dans le dépôt, quel que soit l’ordinateur
+* text=auto eol=lf
+*.png binary

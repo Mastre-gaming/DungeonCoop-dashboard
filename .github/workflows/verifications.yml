@@ -1,0 +1,61 @@
+# Les vérifications automatiques du dashboard : elles tournent sur chaque PR et sur main.
+# Le job s'appelle « tests », comme dans le repo du jeu : c'est le nom qu'on coche dans la règle de main.
+
+name: Verifications
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verifications-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rien d'interdit dans le dépôt (node_modules, secrets, captures)
+        run: |
+          bad=$(git ls-files | grep -E '(^|/)(node_modules|dist|secrets|captures|\.wrangler)/|(^|/)\.env($|\.)|(^|/)\.dev\.vars$|\.(key|pem)$' | grep -v '\.env\.example$' || true)
+          if [ -n "$bad" ]; then
+            echo "::error::Ces fichiers ne doivent pas être dans le dépôt (voir .gitignore) :"
+            echo "$bad"
+            exit 1
+          fi
+
+      - name: Pas de ligne co-auteur dans les commits
+        if: github.event_name == 'pull_request'
+        run: |
+          if git log --format=%B "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" | grep -qi '^co-authored-by:'; then
+            echo "::error::Un commit de cette PR contient une ligne « Co-authored-by: ». C'est interdit dans l'équipe (voir le guide d'équipe du jeu)."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Tests du Worker (sans Cloudflare)
+        run: node --test "worker/test/*.test.js"
+
+      - name: Tests de la page (?test dans Chrome sans écran)
+        run: node outils/test.mjs
+
+      - name: Garder les captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: captures
+          path: captures/
+          if-no-files-found: ignore

@@ -1,0 +1,15 @@
+[
+  { "nom": "Le repo du jeu", "url": "https://github.com/Mastre-gaming/DungeonCoop", "icone": "📦", "note": "le code, les docs, l’historique" },
+  { "nom": "Les issues", "url": "https://github.com/Mastre-gaming/DungeonCoop/issues", "icone": "📋", "note": "idées, retours, tâches" },
+  { "nom": "Nouvelle idée", "url": "https://github.com/Mastre-gaming/DungeonCoop/issues/new?template=idee.md", "icone": "💡", "note": "le modèle « Idée »" },
+  { "nom": "Le GitHub Project", "url": "", "icone": "🗂️", "note": "le tableau Kanban (phase 0)" },
+  { "nom": "Le guide d’équipe", "url": "https://github.com/Mastre-gaming/DungeonCoop/blob/main/docs/GUIDE_EQUIPE.md", "icone": "🧭", "note": "branches, PR, conflits" },
+  { "nom": "GAME_SPEC", "url": "https://github.com/Mastre-gaming/DungeonCoop/blob/main/GAME_SPEC.md", "icone": "🗺️", "note": "le plan et l’état du jeu" },
+  { "nom": "Les règles du combat", "url": "https://github.com/Mastre-gaming/DungeonCoop/blob/main/FIGHT_RULES.md", "icone": "⚔️", "note": "FIGHT_RULES.md" },
+  { "nom": "Le jeu en ligne", "url": "", "icone": "🎲", "note": "arrive au jalon M1" },
+  { "nom": "Sprite Painter", "url": "https://github.com/Mastre-gaming/DungeonCoop/tree/tools/lpc-sprite-mods/tools/lpc-sprite-mods/editor", "icone": "🎨", "note": "l’éditeur de persos, se lance sur ton ordi" },
+  { "nom": "Générateur LPC", "url": "https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/", "icone": "🧙", "note": "la base de chaque perso" },
+  { "nom": "Le lanceur Mastre-gaming", "url": "https://mastre-gaming.github.io/", "icone": "🕹️", "note": "tous les jeux de l’équipe" },
+  { "nom": "Discord", "url": "", "icone": "💬", "note": "le lien d’invitation du serveur" },
+  { "nom": "Le code du dashboard", "url": "https://github.com/Mastre-gaming/DungeonCoop-dashboard", "icone": "🛠️", "note": "cette page, un widget par fichier" }
+]

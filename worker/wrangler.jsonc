@@ -1,0 +1,19 @@
+// Le Worker « en direct » : npm run deploy dans ce dossier (après npx wrangler login).
+// Ses deux secrets ne sont jamais dans ce fichier : npx wrangler secret put GITHUB_TOKEN, puis WEBHOOK_SECRET.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "dungeoncoop-direct",
+  "main": "src/index.js",
+  "compatibility_date": "2026-06-01",
+  "workers_dev": true,
+  "durable_objects": {
+    "bindings": [{ "name": "SALLE", "class_name": "Salle" }]
+  },
+  // Le stockage SQLite est celui du plan gratuit.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Salle"] }],
+  "vars": {
+    // Les repos suivis : seuls leurs webhooks sont acceptés, et seuls leurs chemins sont lus avec le token.
+    "DEPOTS": "Mastre-gaming/DungeonCoop,Mastre-gaming/DungeonCoop-dashboard"
+  },
+  "observability": { "enabled": true }
+}
