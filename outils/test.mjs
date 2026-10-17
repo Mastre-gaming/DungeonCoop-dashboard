@@ -19,7 +19,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { demarrer } from './serveur.mjs';
 
-const CAPTURES = fileURLToPath(new URL('../captures/', import.meta.url));
+// CAPTURES=… pour les mettre ailleurs : utile avec « wrangler dev », qui redémarre à chaque fichier écrit dans le repo.
+const CAPTURES = process.env.CAPTURES ?? fileURLToPath(new URL('../captures/', import.meta.url));
 const pause = (ms) => new Promise((ok) => setTimeout(ok, ms));
 const arguments_ = process.argv.slice(2);
 const option = (nom) => {
@@ -202,6 +203,47 @@ async function principal() {
       const faux = await fetch(`${direct}/webhook`, { method: 'POST', body: corps, headers: { 'X-GitHub-Event': 'ping', 'X-Hub-Signature-256': `sha256=${'0'.repeat(64)}` } });
       if (faux.status !== 401) echecs.push(`direct : un webhook mal signé reçoit ${faux.status} au lieu de 401`);
       console.log(`direct : capture ${await onglet.capturer('direct')}`);
+    }
+
+    // 4. La porte, avec la page servie par wrangler (npx wrangler dev à la racine, MOT_DE_PASSE dans .dev.vars).
+    const porte = option('--porte');
+    if (porte) {
+      const motDePasse = option('--mot-de-passe');
+      if (!motDePasse) throw new Error('--porte demande aussi --mot-de-passe (le MOT_DE_PASSE de .dev.vars)');
+      const nombreErreurs = onglet.erreurs.length;
+      await onglet.aller(`${porte}/?sans-direct`);
+      await onglet.attendre('document.querySelector("input[type=password]")');
+      console.log(`porte : écran d’entrée · capture ${await onglet.capturer('entree')}`);
+      const remplir = (mdp) => onglet.evaluer(`(() => {
+        document.querySelector('input[name=mot_de_passe]').value = ${JSON.stringify(mdp)};
+        document.querySelector('input[name=nom]').value = 'Paul';
+        document.querySelector('form').submit();
+        return true;
+      })()`);
+      await remplir('pas-le-bon');
+      await onglet.attendre('document.querySelector(".message")?.textContent.includes("incorrect")')
+        .catch(() => echecs.push('porte : un mauvais mot de passe n’affiche pas d’erreur'));
+      await remplir(motDePasse);
+      await onglet.attendre('document.querySelectorAll(".carte[data-etat]").length === 6')
+        .catch(() => echecs.push('porte : le dashboard ne s’ouvre pas après le bon mot de passe'));
+      const apres = await onglet.evaluer(`({
+        nom: document.querySelector('#nom-session')?.textContent,
+        sessionVisible: !document.querySelector('#session')?.hidden,
+        choixCache: document.querySelector('#choix-moi')?.hidden,
+        pourToi: document.querySelector('#pour-toi h2')?.textContent ?? '',
+        adresse: location.search,
+      })`);
+      if (apres.nom !== 'Paul' || !apres.sessionVisible || !apres.choixCache) echecs.push(`porte : le nom n’est pas affiché (${JSON.stringify(apres)})`);
+      if (!apres.pourToi.includes('Paul')) echecs.push(`porte : « Pour toi » ne reconnaît pas Paul (${apres.pourToi})`);
+      if (apres.adresse !== '?sans-direct') echecs.push(`porte : l’entrée ne ramène pas à l’adresse demandée (${apres.adresse})`);
+      console.log(`porte : entré comme ${apres.nom} · capture ${await onglet.capturer('apres-entree')}`);
+      await onglet.aller(`${porte}/deconnexion`);
+      await onglet.attendre('document.querySelector("input[type=password]")')
+        .then(() => console.log('porte : déconnexion ok'))
+        .catch(() => echecs.push('porte : la déconnexion ne ramène pas à l’écran d’entrée'));
+      // Les 401 de la page d'entrée sont voulus : on ne les compte pas comme des erreurs de la page.
+      onglet.erreurs.splice(nombreErreurs, onglet.erreurs.length - nombreErreurs,
+        ...onglet.erreurs.slice(nombreErreurs).filter((e) => !/401|Unauthorized/.test(e)));
     }
 
     if (onglet.erreurs.length) echecs.push(...onglet.erreurs.map((e) => `erreur dans la page : ${e}`));

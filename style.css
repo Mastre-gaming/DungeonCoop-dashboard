@@ -101,6 +101,9 @@ h1, h2, h3 { margin: 0; line-height: 1.2; }
 
 .commandes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .moi { display: inline-flex; align-items: center; gap: 8px; color: var(--texte-2); font-size: 0.9rem; }
+.moi[hidden], .session[hidden] { display: none; }
+.session { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; }
+.session a { margin-left: 4px; font-size: 0.85rem; }
 select {
   font: inherit;
   color: var(--texte);

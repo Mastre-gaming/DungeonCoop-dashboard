@@ -26,7 +26,8 @@
       </div>
     </div>
     <div class="commandes">
-      <label class="moi">Je suis <select id="moi"><option value="">—</option></select></label>
+      <label class="moi" id="choix-moi">Je suis <select id="moi"><option value="">—</option></select></label>
+      <span id="session" class="session" hidden><span class="muet">Connecté :</span> <strong id="nom-session"></strong> <a href="/deconnexion">Se déconnecter</a></span>
       <span id="etat" class="etat github" title=""><span class="point" aria-hidden="true"></span><span>Chargement…</span></span>
       <div id="theme" class="theme" role="group" aria-label="Thème de la page">
         <button type="button" data-theme-choix="light" title="Thème clair"><span aria-hidden="true">☀</span><span class="libelle">Clair</span></button>

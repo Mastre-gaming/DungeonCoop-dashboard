@@ -6,7 +6,8 @@ Une seule page web pour toute l'équipe de [DungeonCoop](https://github.com/Mast
 
 | Partie | Ce qu'on y voit |
 |---|---|
-| Pour toi | choisis qui tu es en haut : les PR qui attendent ta relecture, les conflits et tests rouges sur tes PR, tes tâches |
+| L'entrée | le mot de passe de l'équipe et ton nom de dev, une fois tous les 30 jours sur chaque navigateur |
+| Pour toi | les PR qui attendent ta relecture, les conflits et tests rouges sur tes PR, tes tâches |
 | PR et conflits | une carte par PR ouverte (jeu et dashboard) : tests, conflit, relecture, depuis combien de jours elle attend |
 | Derniers push | qui a poussé quoi, sur quelle branche, il y a combien de temps |
 | Qui fait quoi | une colonne par personne, plus ce que personne n'a pris |
@@ -22,6 +23,7 @@ GitHub ──webhook──▶ Worker « direct » ──WebSocket──▶ les p
    └──────────── lecture de l'API (5 000/h) ◀──────────────┘
 ```
 
+- **Une porte devant la page.** Un petit Worker (`porte/`) passe devant chaque fichier : sans le mot de passe de l'équipe, on ne voit que l'écran d'entrée. Le mot de passe n'est jamais dans le repo (il est public) : c'est le secret Cloudflare `MOT_DE_PASSE`. Après l'entrée, le navigateur garde un laissez-passer signé 30 jours ; changer le mot de passe déconnecte tout le monde. Le nom tapé à l'entrée remplace « Je suis » : « Paul » est reconnu comme `PCrrfng` grâce à `equipe.json`.
 - **Les données restent dans GitHub.** La page les lit et les rassemble, elle n'en garde aucune. Pour agir (poster une idée, s'assigner, fusionner), les boutons ouvrent GitHub.
 - **En direct :** GitHub prévient le Worker à chaque événement (push, PR, relecture, issue, tests…). Le Worker vide son cache pour ce sujet et prévient les pages ouvertes, qui redessinent seulement les widgets concernés et affichent une notification.
 - **Sans le Worker**, la page lit GitHub elle-même : elle est à jour à l'ouverture, mais ne bouge plus toute seule, et GitHub limite à 60 appels par heure (d'où un cache de 5 minutes).
@@ -45,6 +47,8 @@ worker/                    le Worker « direct » (son propre package.json)
 outils/serveur.mjs         un serveur pour ouvrir la page sur ton ordi
 outils/test.mjs            le test sans écran (Chrome ou Edge), avec captures
 wrangler.jsonc             la publication de la page par Cloudflare
+porte/index.js             la porte : mot de passe, laissez-passer, /session
+porte/page.js              l'écran d'entrée
 ```
 
 ## Sur ton ordi
@@ -61,6 +65,8 @@ Utile dans l'adresse : `?demo` (données inventées), `?sans-direct` (lire GitHu
 
 **Le Worker sur ton ordi :** dans `worker/`, `npm install`, puis crée `worker/.dev.vars` avec la ligne `WEBHOOK_SECRET=un-secret-de-test` et lance `npm run dev`. Ensuite, `node outils/test.mjs --direct http://localhost:8787 --secret un-secret-de-test` envoie un faux webhook signé et vérifie que la page le montre. `npm test` dans `worker/` lance ses tests sans Cloudflare.
 
+**La porte sur ton ordi :** `outils/serveur.mjs` sert la page sans porte. Pour l'essayer, crée `.dev.vars` à la racine avec `MOT_DE_PASSE=un-mot-de-passe-de-test`, puis `npx wrangler dev --port 8788 --persist-to ../.wrangler-dashboard` et ouvre http://localhost:8788. Le test de l'entrée : `CAPTURES=../captures-porte node outils/test.mjs --porte http://localhost:8788 --mot-de-passe un-mot-de-passe-de-test` (les captures vont hors du repo, sinon wrangler redémarre à chaque image).
+
 ## Changer quelque chose
 
 - **Un lien ou ton nom :** sur GitHub, ouvre `liens.json` ou `equipe.json`, clique sur le crayon, modifie, et propose le changement dans une PR. Pas besoin de code.
@@ -71,6 +77,8 @@ Utile dans l'adresse : `?demo` (données inventées), `?sans-direct` (lire GitHu
 ## Mise en ligne (Cloudflare, compte de Paul)
 
 **La page** est un Worker relié à ce repo (Workers Builds). Elle se publie toute seule à chaque fusion sur `main`, avec la commande `npx wrangler deploy`. Le nom dans `wrangler.jsonc` doit être exactement celui du projet dans Cloudflare. Pour un lien d'aperçu sur chaque PR : dans le projet, *Settings* → *Build* → *Branch control* → **Builds for non-production branches**.
+
+**Le mot de passe de la page**, à poser une fois (avant la première fusion qui contient `porte/`, sinon la page reste fermée et le dit) : dans Cloudflare, *Workers & Pages* → `dungeoncoop-dashboard` → *Settings* → *Variables and Secrets* → *Add*, type **Secret**, nom `MOT_DE_PASSE`. Ou, à la racine du repo : `npx wrangler secret put MOT_DE_PASSE`. Pour changer de mot de passe, on remplace ce secret : tout le monde devra rentrer le nouveau.
 
 **Le Worker direct**, depuis `worker/` (une fois, puis à chaque changement de `worker/`) :
 

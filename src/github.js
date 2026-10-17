@@ -132,6 +132,22 @@ async function depuisGithub(chemin, force) {
   throw erreurHttp(`GitHub a répondu ${reponse.status} pour ${chemin}`, reponse.status);
 }
 
+// --- La session (le mot de passe de la plateforme) ----------------------------------------
+
+// { nom, jeton } quand la page est servie par la porte (porte/index.js) et qu'on est connecté.
+// Sur ton ordi (outils/serveur.mjs) ou en démo, il n'y a pas de porte : null, et « Je suis » sert à la place.
+export async function session() {
+  if (modeDemo) return null;
+  try {
+    const reponse = await fetch('/session', { cache: 'no-store', credentials: 'same-origin' });
+    if (!reponse.ok) return null;
+    const donnees = await reponse.json();
+    return donnees?.nom ? donnees : null;
+  } catch {
+    return null;
+  }
+}
+
 // --- Fichiers ------------------------------------------------------------------------------
 
 // Un fichier texte du repo du jeu (GAME_SPEC.md).
