@@ -6,6 +6,29 @@
 
 ---
 
+## Phase 0 : le camp (jalon M1)
+
+**L'idée (le propriétaire, 18 oct) : construire le jeu, c'est déjà le jeu.** On est des apprentis développeurs, et coder le jeu est une grande partie du fun. Alors la création elle-même devient un jeu :
+
+- **Le camp vivant du jeu vient en premier.** C'est une scène en pixel art LPC où les héros marchent librement, avec **un lieu par axe de création** (les 8 axes ci-dessous) et un feu de camp au centre pour toute l'équipe.
+- **Les étapes de ce plan deviennent des missions.** Une mission est une issue du repo du jeu, avec un label d'axe (`axe: …`) et une taille (`taille: S`, `M` ou `L`). On les prend et on les rend dans le **tableau de travail** de ce dashboard.
+- **Chaque mission rentrée fait grandir le lieu de son axe**, en direct, chez tout le monde : de l'emplacement vide à la tente, puis la cabane, puis le bâtiment. Le feu de camp grandit avec le total de l'équipe. Il n'y a pas de classement : on voit ce que l'équipe a construit.
+- **Le camp s'affiche en haut de ce dashboard**, en vue d'ensemble, et en grand sur le lien du jeu, pour héberger et rejoindre avec un code.
+- **Tout le concept est dans [`CAMP.fr.md`](https://github.com/Mastre-gaming/DungeonCoop/blob/main/CAMP.fr.md)**, dans le repo du jeu : les deux repos, les missions, les lieux, la caméra, le prototype et ses critères.
+
+**Qui possède quoi :** le repo du jeu possède le camp (son code, son art, ses règles) et les missions (les issues). Ce repo-ci possède le plan et le tableau de travail, et affiche le camp. Le contrat entre les deux, ce sont les labels des axes (bientôt un seul fichier, `content/axes.json`, lu des deux côtés).
+
+- [ ] **P0.1 Le contrat des missions.** Les labels `axe: …` alignés sur les 8 axes de ce plan, les labels `taille: S/M/L`, et `content/axes.json` dans le repo du jeu, lu par le tableau de travail.
+- [ ] **P0.2 Les missions.** Les étapes des phases 1 et 2 de ce plan deviennent des issues ; chaque étape garde ici le numéro de son issue. **On ne coche plus ce plan :** c'est l'issue fermée qui compte.
+- [ ] **P0.3 Le lien en ligne du jeu** (Cloudflare Pages), publié à chaque fusion sur `main` du jeu.
+- [ ] **P0.4 Le prototype du camp (v0).** Les 8 lieux et le feu, un héros qui marche librement (caméra qui suit avec une zone morte), héberger et rejoindre avec un code, les lieux qui prennent leur niveau d'après les missions.
+- [ ] **P0.5 Le camp dans le dashboard.** Une carte « Le camp » en haut de la page, en vue d'ensemble.
+- [ ] **P0.6 La connexion GitHub du tableau** (l'OAuth App et le secret du Worker, README), pour prendre et rendre les missions depuis ici.
+
+*Fini quand :* une mission fermée dans le tableau fait grandir son lieu, en moins de 5 secondes, chez deux personnes dans le camp ; et le propriétaire note le camp sur 10. C'est le jalon M1, « le camp ».
+
+---
+
 ## 0. L'organisateur : cette semaine
 
 - [ ] **0.1 Fixer la soirée D1** (combat sur papier, 1 h 30, 3 joueurs ou plus). C'est la plus longue à caler et elle débloque presque tout le reste.
@@ -16,7 +39,7 @@
 
   | Axe | Responsable proposé | À trancher |
   |---|---|---|
-  | 1. Histoire | Paolitus (déjà d'accord) | |
+  | 1. Histoire | personne pour l'instant | Paolitus laisse l'axe pour l'instant (18 oct) ; on répartit quand le camp a pris forme |
   | 2. Combat et combos | un arbitre des règles (l'organisateur ?) ; toute l'équipe joue et note | qui tranche les règles |
   | 3. Classes | Fraps ? | Fraps a dit aimer « faire sa propre classe » |
   | 4. Structure des runs | Paolitus ou Fraps | les deux veulent « salles et carte » |
@@ -35,16 +58,17 @@
 
 | Phase | Ce qui avance | Pourquoi dans cet ordre |
 |---|---|---|
+| **Phase 0 : maintenant** | le camp (M1) : le contrat des missions, les missions, le lien en ligne, le prototype du camp | construire le jeu fait partie du jeu ; chaque mission rentrée ensuite fait grandir le camp |
 | **Phase 1 : maintenant, en parallèle** | D1 combat sur papier (axe 2) · D3 fiche du monde (axe 1) · moodboard et D4 premier sprite (axe 6) | le monde et l'art ne dépendent pas des chiffres du combat ; tout le reste, si |
 | **Phase 2 : après D1** | D2 classes (axe 3) · chiffrage des runs (axe 4) · salles sur papier (axe 5) · maquettes d'écran (axe 7) · chaîne du chapitre 1 (axe 1) | D1 fixe le mode de tour, les PV et la durée d'un combat |
-| **Phase 3 : M1, le premier code** | la table est mise : lien en ligne, quatre héros sur une salle, rejoindre avec un code | demande KICKOFF signé et `docs/MISE_EN_PLACE.md` coché |
+| **Phase 3 : la grille** | le premier code du combat : la grille, le déplacement case par case, le tour à tour (M1 est devenu le camp, en phase 0) | il faut D1 tranché ; KICKOFF est signé (18 oct) |
 | **Phase 4 : M2 puis M3** | les dés et les tours, puis les combos jouables et le boss | le focus du jeu : viser 9/10 sur les combos |
 | **Phase 5 : M4 et après** | la run complète, puis le camp, le journal, le son | seulement quand le combat tient au moins 5/10 à quatre |
 
 ---
 
 ## Axe 1. Histoire et narration
-**Responsable :** Paolitus. **L'histoire est celle de l'équipe** : personne ne la fait écrire par Claude.
+**Responsable :** personne pour l'instant (Paolitus laisse l'axe, 18 oct). On répartit quand le camp a pris forme. **L'histoire est celle de l'équipe** : personne ne la fait écrire par Claude.
 
 - [ ] **1.1 Valider le cadre.** Paolitus lit `STORY_STRUCTURE.fr.md` et dit oui, ou ce qu'il faut changer.
   *Rend :* sa réponse dans les questions ouvertes de `GAME_SPEC.md`. *Fini quand :* la question « Paolitus est-il d'accord ? » a une réponse.
