@@ -50,6 +50,7 @@ export async function lancerTests({ simuler }) {
   verifier('Idées : la priorité décide, les votes départagent', egal(numeros('#idees .colonne[data-jalon="M2"] li'), [23, 26]), numeros('#idees .colonne[data-jalon="M2"] li'));
   verifier('Idées : « Priorité : Moyenne » est lu comme « moyenne »', $('#idees li[data-numero="22"]')?.dataset.priorite === 'moyenne');
   verifier('Idées : un titre avec du HTML reste du texte', !$('#idees b') && texte('#idees').includes('<b>HTML</b>'));
+  verifier('Idées : le « [Idée] » du modèle n’est pas répété', $('#idees li[data-numero="25"] .titre')?.textContent === 'Une musique de taverne', $('#idees li[data-numero="25"] .titre')?.textContent);
 
   // Avancée
   const jalon = (id) => $(`#avancee .jalon[data-jalon="${id}"]`);

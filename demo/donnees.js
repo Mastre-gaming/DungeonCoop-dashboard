@@ -90,7 +90,7 @@ export function donnees() {
     issue(22, { titre: 'Un butin lâché par les ennemis', auteur: 'demo-cerise', labels: ['idée', 'Priorité : Moyenne'], jalon: 'M4', votes: 4, commentaires: 1 }),
     issue(23, { titre: 'Montrer ce que fera le combo avant de valider', auteur: 'demo-ayla', labels: ['idée', 'priorité: haute'], jalon: 'M2 : Roll for it', votes: 4, commentaires: 6 }),
     issue(24, { titre: 'Titre avec du <b>HTML</b> : il doit rester du texte', auteur: 'demo-dorn', labels: ['idée'], heures: 1 }),
-    issue(25, { titre: 'Une musique de taverne', auteur: 'demo-brams', labels: ['Idee'], votes: 1, heures: 10 }),
+    issue(25, { titre: '[Idée] Une musique de taverne', auteur: 'demo-brams', labels: ['Idee'], votes: 1, heures: 10 }),
     issue(26, { titre: 'Un mode spectateur', auteur: 'demo-dorn', labels: ['idée', 'priorité: moyenne'], jalon: 'M2 : Roll for it', votes: 1 }),
     issue(30, { titre: 'Écrire la fiche de classe du rôdeur', auteur: 'demo-ayla', labels: ['combats'], jalon: 'D2', assignes: ['demo-ayla'] }),
     issue(31, { titre: 'Peindre le sprite du mage', auteur: 'demo-cerise', labels: ['pixel-art'], jalon: 'D4', assignes: ['demo-cerise'] }),
