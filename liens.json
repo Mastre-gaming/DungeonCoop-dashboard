@@ -6,7 +6,7 @@
   { "nom": "Le guide d’équipe", "url": "https://github.com/Mastre-gaming/DungeonCoop/blob/main/docs/GUIDE_EQUIPE.md", "icone": "🧭", "note": "branches, PR, conflits" },
   { "nom": "GAME_SPEC", "url": "https://github.com/Mastre-gaming/DungeonCoop/blob/main/GAME_SPEC.md", "icone": "🗺️", "note": "le plan et l’état du jeu" },
   { "nom": "Les règles du combat", "url": "https://github.com/Mastre-gaming/DungeonCoop/blob/main/FIGHT_RULES.md", "icone": "⚔️", "note": "FIGHT_RULES.md" },
-  { "nom": "Le jeu en ligne", "url": "", "icone": "🎲", "note": "arrive au jalon M1" },
+  { "nom": "Le jeu en ligne", "url": "https://dungeoncoop.0xbaba-eth.workers.dev", "icone": "🎲", "note": "le camp arrive au jalon M1" },
   { "nom": "Sprite Painter", "url": "/sprite-painter/", "icone": "🎨", "note": "l’éditeur de persos de BABA, dans le navigateur" },
   { "nom": "Générateur LPC", "url": "https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/", "icone": "🧙", "note": "la base de chaque perso" },
   { "nom": "Le lanceur Mastre-gaming", "url": "https://mastre-gaming.github.io/", "icone": "🕹️", "note": "tous les jeux de l’équipe" },
