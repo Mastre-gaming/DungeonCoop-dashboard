@@ -1,0 +1,130 @@
+# Plan de travail : les axes de création
+
+**Pour qui :** toute l'équipe. **Tenu par :** l'organisateur (le propriétaire), qui répartit le travail et coche les étapes.
+**Comment lire :** chaque axe a un responsable, puis des étapes dans l'ordre. Chaque étape dit **qui**, **ce qu'on rend**, et **quand c'est fini**. On ne passe à l'étape suivante que quand la précédente est finie, sauf mention « en parallèle ».
+**Les règles du jeu restent dans leurs fichiers**, dans le [repo du jeu](https://github.com/Mastre-gaming/DungeonCoop) (`FIGHT_RULES.md`, `CLASS_TEMPLATE.fr.md`, `STORY_STRUCTURE.fr.md`, `LEVEL_STRUCTURE.md`, `docs/`) : ce plan dit seulement qui fait quoi et dans quel ordre. Tous les fichiers cités ci-dessous sont dans ce repo-là. Le tableau Miro « Dungeon Co-op : axes du projet » en est la vue d'ensemble.
+
+---
+
+## 0. L'organisateur : cette semaine
+
+- [ ] **0.1 Fixer la soirée D1** (combat sur papier, 1 h 30, 3 joueurs ou plus). C'est la plus longue à caler et elle débloque presque tout le reste.
+  *Fini quand :* une date est dans tous les agendas.
+- [ ] **0.2 Récupérer les réponses manquantes** au questionnaire (`FRIEND_PROMPT.fr.md`) : il en manque encore pour une partie de l'équipe. Donner une date limite (par exemple la veille de D1).
+  *Fini quand :* chaque ami a son fichier dans `friends/`.
+- [ ] **0.3 Réunion « qui fait quoi »** (30 min sur Discord, avec le tableau Miro à l'écran). Chaque axe repart avec **un** responsable, qui a le dernier mot dessus. Proposition de départ, d'après `FRIENDS.md` :
+
+  | Axe | Responsable proposé | À trancher |
+  |---|---|---|
+  | 1. Histoire | Paolitus (déjà d'accord) | |
+  | 2. Combat et combos | un arbitre des règles (l'organisateur ?) ; toute l'équipe joue et note | qui tranche les règles |
+  | 3. Classes | Fraps ? | Fraps a dit aimer « faire sa propre classe » |
+  | 4. Structure des runs | Paolitus ou Fraps | les deux veulent « salles et carte » |
+  | 5. Level design | celui des deux qui ne prend pas l'axe 4 | idem |
+  | 6. Direction artistique | Fraps ? | Fraps est volontaire, mais a dit non à en être responsable |
+  | 7. Interface | Paolitus ? | Paolitus fait du design d'interface |
+  | 8. Son et musique | Paolitus ? | rien avant M3 |
+
+  *Fini quand :* le tableau ci-dessus est rempli dans `FRIENDS.md` et les pastilles orange du Miro sont passées au vert.
+- [ ] **0.4 Lancer le rituel.** Un point de 30 minutes par semaine, toujours le même jour. Chaque responsable dit : ce qui est fini, sa prochaine étape, ce qui le bloque. L'organisateur met le Miro à jour.
+- [ ] **0.5 Rappeler la règle des idées.** Une idée nouvelle va dans le parking (`GAME_SPEC.md`) ou dit ce qu'elle remplace. Rien n'entre dans le travail en cours sans ça.
+
+---
+
+## L'ordre global
+
+| Phase | Ce qui avance | Pourquoi dans cet ordre |
+|---|---|---|
+| **Phase 1 : maintenant, en parallèle** | D1 combat sur papier (axe 2) · D3 fiche du monde (axe 1) · moodboard et D4 premier sprite (axe 6) | le monde et l'art ne dépendent pas des chiffres du combat ; tout le reste, si |
+| **Phase 2 : après D1** | D2 classes (axe 3) · chiffrage des runs (axe 4) · salles sur papier (axe 5) · maquettes d'écran (axe 7) · chaîne du chapitre 1 (axe 1) | D1 fixe le mode de tour, les PV et la durée d'un combat |
+| **Phase 3 : M1, le premier code** | la table est mise : lien en ligne, quatre héros sur une salle, rejoindre avec un code | demande KICKOFF signé et `docs/MISE_EN_PLACE.md` coché |
+| **Phase 4 : M2 puis M3** | les dés et les tours, puis les combos jouables et le boss | le focus du jeu : viser 9/10 sur les combos |
+| **Phase 5 : M4 et après** | la run complète, puis le camp, le journal, le son | seulement quand le combat tient au moins 5/10 à quatre |
+
+---
+
+## Axe 1. Histoire et narration
+**Responsable :** Paolitus. **L'histoire est celle de l'équipe** : personne ne la fait écrire par Claude.
+
+- [ ] **1.1 Valider le cadre.** Paolitus lit `STORY_STRUCTURE.fr.md` et dit oui, ou ce qu'il faut changer.
+  *Rend :* sa réponse dans les questions ouvertes de `GAME_SPEC.md`. *Fini quand :* la question « Paolitus est-il d'accord ? » a une réponse.
+- [ ] **1.2 Séance « monde » (1 h, toute l'équipe, en parallèle de D1).** Sur le Miro, chacun pose des post-it : le ton, le lieu, la menace (le Boss final), trois lieux de chapitre possibles. Paolitus tranche à la fin.
+- [ ] **1.3 Écrire la fiche du monde (D3).** Une page : le monde en 5 lignes, le Boss final, les lieux des 3 chapitres, et pour le chapitre 1 : son lieu, ses ennemis, ses 3 boss.
+  *Fini quand :* le groupe dit oui à la page (c'est la condition de D3).
+- [ ] **1.4 Fixer les archétypes.** Garder ou renommer Combattant, Soutien, À distance, Mage. *Fini quand :* la liste est fermée dans `STORY_STRUCTURE.fr.md` §4 (l'axe 3 en a besoin).
+- [ ] **1.5 La chaîne du chapitre 1 (phase 2).** Une ouverture et 3 ou 4 maillons, chacun au format de `STORY_STRUCTURE.fr.md` §6 (4 lignes au plus, besoins, drapeaux posés, lignes de secours).
+- [ ] **1.6 Les événements d'ambiance du chapitre 1.** Il en faut 4. **Chaque ami en écrit un**, avec sa référence ou son easter egg, et Paolitus les relit.
+- [ ] **1.7 La salle d'entraînement.** Deux défis au tour par tour sur papier (par exemple « faire tomber trois mannequins du rebord en deux rounds »), testés à la fin d'une soirée papier.
+- [ ] **Plus tard (M4) :** le camp, le journal, l'épilogue.
+
+## Axe 2. Combat et combos (le focus du jeu)
+**Responsable :** l'arbitre des règles choisi en 0.3. Toute l'équipe joue et note.
+
+- [ ] **2.1 Jouer D1** avec `PAPER_FIGHT_KIT.fr.md` : un combat en ordre d'initiative, un en tour d'équipe. On remplit la fiche de mesure **pendant** la partie.
+- [ ] **2.2 Trancher, le lendemain.** Le mode de tour, les PV, la durée d'un combat, d'après la fiche. *Rend :* `FIGHT_RULES.md` et `CORE_LOOP.md` mis à jour. *Fini quand :* « fun à quatre » est noté (5/10 ou plus pour passer) et les trois questions ouvertes de D1 sont fermées dans `GAME_SPEC.md`.
+- [ ] **2.3 La grille des combos.** Sur le Miro, un tableau classe × classe : pour chaque paire, un combo « l'un prépare, l'autre exploite ». *Fini quand :* chacune des quatre classes choisies (axe 3) a au moins un combo avec une autre.
+- [ ] **2.4 Ce que montre l'aperçu d'un combo.** En une phrase par cas : avant de valider, le joueur voit quoi (dégâts doublés, case qui prend feu, ennemi poussé) ? *Rend :* une courte liste, transmise à l'axe 7.
+- [ ] **2.5 Deuxième combat sur papier** avec les quatre classes choisies et une salle de l'axe 5. On vérifie : un combo possible dès le premier round, et personne ne porte les autres.
+- [ ] **2.6 M2 et M3 (code).** Claude construit les dés, les tours et les combos ; l'équipe joue sur le lien en ligne et note sur 10. *Fini quand :* les quatre gagnent le boss avec un combo montré avant d'être joué (le 9/10 du focus).
+
+## Axe 3. Classes et personnages
+**Responsable :** à trancher en 0.3 (Fraps intéressé). **Commence après D1** : les PV et le rythme des tours changent les chiffres des classes.
+
+- [ ] **3.1 Chaque ami crée une classe** avec `CLASS_TEMPLATE.fr.md`, même sans coder. Chaque fiche a un **crochet de combo** vers une autre classe.
+- [ ] **3.2 Le responsable vérifie le budget** : 27 points de caractéristiques, 10 points de classe, 3 capacités dont une attaque de base, une vraie faiblesse.
+- [ ] **3.3 Le groupe choisit les quatre premières** (D2) : un rôle chacune (tank, dégâts, soutien, contrôle), et des archétypes variés. *Fini quand :* quatre fiches dans le budget, chacune avec son combo.
+- [ ] **3.4 Les tester** dans le deuxième combat sur papier (2.5), puis corriger les chiffres.
+- [ ] **3.5 L'apparence de chaque héros.** Chaque joueur décrit son héros et envoie son lien du générateur LPC à l'axe 6.
+- [ ] **Plus tard :** les sous-classes du niveau 3 et la table des niveaux.
+
+## Axe 4. Structure des runs
+**Responsable :** Paolitus ou Fraps (0.3). **Commence après D1.**
+
+- [ ] **4.1 Recompter la run avec la vraie durée d'un combat.** Si un combat dure 7 minutes, on garde 9 salles ; s'il dure plus, on descend vers 6. *Rend :* `LEVEL_STRUCTURE.md` mis à jour.
+- [ ] **4.2 Trancher la progression** : qu'est-ce qui reste d'une run à l'autre, et qu'est-ce qui repart à zéro (la tension 2 de `CORE_LOOP.md`). Le responsable propose, l'organisateur valide.
+- [ ] **4.3 La liste des récompenses du chapitre 1.** Une quinzaine : nouvelles capacités, améliorations, équipement à looter. Avec les prix de la boutique.
+- [ ] **4.4 Une run sur papier, en accéléré.** Tirer les salles, résoudre les combats en gros, faire le jet de défaite une fois. *Fini quand :* on sait si la run tient en environ 65 minutes.
+- [ ] **4.5 M4 (code).** *Fini quand :* trois runs du même chapitre ne se ressemblent pas.
+
+## Axe 5. Level design
+**Responsable :** Paolitus ou Fraps (0.3). **Commence après D1.**
+
+- [ ] **5.1 Revoir la salle du kit** (10 × 8 cases) d'après ce qui a ennuyé ou plu pendant D1.
+- [ ] **5.2 Les règles d'une salle de combat.** Chaque salle offre au moins une préparation de combo dans le décor (tonneau d'huile, flaque, rebord, glace). *Rend :* une demi-page, ajoutée à `LEVEL_STRUCTURE.md`.
+- [ ] **5.3 Dessiner les salles de combat du chapitre 1** sur papier quadrillé ou sur le Miro. Commencer par 3, puis aller jusqu'à 8 (la réserve d'un chapitre).
+- [ ] **5.4 Les groupes d'ennemis du chapitre 1.** Huit groupes, avec les habitudes de `FIGHT_RULES.md` et les ennemis de la fiche du monde (axe 1).
+- [ ] **5.5 Trois énigmes ou pièges** sur papier.
+- [ ] **5.6 Tester deux salles** dans le deuxième combat sur papier (2.5).
+
+## Axe 6. Direction artistique
+**Responsable :** à trancher en 0.3 (Fraps volontaire). **Peut commencer tout de suite.**
+
+- [ ] **6.1 Un moodboard sur le Miro** : une dizaine d'images (couleurs, ambiance, exemples LPC). À recaler sur la fiche du monde quand elle sort.
+- [ ] **6.2 Le premier sprite (D4).** Un héros fait dans le générateur LPC, retouché dans Sprite Painter. *Fini quand :* le propriétaire lui donne 7/10 ou plus. Le critère : la classe et l'équipement se lisent à la taille du jeu.
+- [ ] **6.3 Les quatre héros** à partir des liens envoyés en 3.5.
+- [ ] **6.4 Le jeu de tuiles.** Choisir un pack LPC sur OpenGameArt, vérifier sa licence, l'inscrire dans les crédits.
+- [ ] **6.5 La liste des effets visuels des combos** : les quatre surfaces (huile, eau, feu, glace) et les icônes d'état (Trempé, Huilé, En feu, Gelé, À terre). Pour M3.
+- [ ] **Toujours :** chaque pièce LPC garde sa licence ; les crédits viennent de l'export du générateur.
+
+## Axe 7. Interface et UX
+**Responsable :** à trancher en 0.3 (Paolitus intéressé). **Commence après D1.**
+
+- [ ] **7.1 La liste des écrans** : titre, héberger ou rejoindre, choix du héros, combat, carte de la run, récompense, vote, crédits (et plus tard le camp et le journal).
+- [ ] **7.2 La maquette de l'écran de combat**, sur papier ou sur le Miro : la barre d'initiative, la chance de toucher au survol, l'aperçu du combo (liste de 2.4), à qui c'est le tour. Référence : Baldur's Gate 3.
+- [ ] **7.3 La tester pendant le deuxième combat sur papier.** On demande aux joueurs ce qu'il leur manquait pour décider.
+- [ ] **7.4 Le style** : police pixel, couleurs prises du moodboard (axe 6).
+- [ ] **7.5 M1 et M2 (code).** *Fini quand :* « lire un combat » est noté 6/10 ou plus.
+
+## Axe 8. Son et musique
+**Responsable :** à trancher en 0.3 (Paolitus intéressé). **En dernier**, avec un budget fixé à ce moment-là.
+
+- [ ] **8.1 Avant M3 : seulement des références.** Une playlist de 5 morceaux qui collent au monde, rangée dans le parking.
+- [ ] **8.2 Après M3 : les bruitages d'abord**, en partant des combos (feu, foudre, glace, poussée, coup critique).
+- [ ] **8.3 Puis la musique**, une par lieu si l'équipe le veut.
+
+---
+
+## Les trois actions de l'organisateur, dès aujourd'hui
+1. **Envoyer le message de l'équipe** : la date de D1 à choisir, la date limite du questionnaire, l'heure de la réunion « qui fait quoi ».
+2. **Envoyer le kit** (`PAPER_FIGHT_KIT.fr.md`) et le lien du Miro à chacun.
+3. **Lancer en parallèle** la séance « monde » (Paolitus, 1.2) et le moodboard (6.1) : ils n'attendent pas D1.
