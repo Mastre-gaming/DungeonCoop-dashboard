@@ -265,11 +265,11 @@ async function demarrer() {
   dessinerEtat();
 
   // La messagerie : le laissez-passer vient de l'entrée. Sur ton ordi, sans porte, on peut en poser un à la main
-  // dans localStorage (« dungeoncoop:jeton ») pour essayer avec un Worker lancé en local.
+  // dans localStorage (« dungeoncoop:laissez-passer ») pour essayer avec un Worker lancé en local.
   messagerie = installerMessagerie({
     equipe: etat.equipe,
     moi: etat.moi,
-    jeton: etat.session?.jeton ?? (github.modeDemo ? null : lireStockage('dungeoncoop:jeton')),
+    jeton: etat.session?.jeton ?? (github.modeDemo ? null : lireStockage('dungeoncoop:laissez-passer')),
     nomSession: etat.session?.nom ?? null,
     disponible: github.modeDirect,
     demo: github.modeDemo,
