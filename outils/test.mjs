@@ -269,7 +269,7 @@ async function principal() {
         await pause(500);
         if (b.recus.some((m) => m.type === 'message')) echecs.push('messagerie : une page sans mot de passe a reçu un message');
         // La page, avec le même laissez-passer, voit le message et peut répondre.
-        await onglet.evaluer(`localStorage.setItem('dungeoncoop:jeton', ${JSON.stringify(jeton)}), true`);
+        await onglet.evaluer(`localStorage.setItem('dungeoncoop:laissez-passer', ${JSON.stringify(jeton)}), true`);
         await onglet.aller(`${page}/?direct=${encodeURIComponent(direct)}`);
         await onglet.attendre('document.querySelector("#bulle-messages")');
         await onglet.evaluer('document.querySelector("#bulle-messages").click(), true');
@@ -281,7 +281,7 @@ async function principal() {
         if (reponse?.message.auteur !== 'Paul') echecs.push('messagerie : le message de la page n’arrive pas aux autres');
         else console.log('messagerie : Node → page → Node, ok ; une page sans mot de passe ne reçoit rien');
         console.log(`messagerie : capture ${await onglet.capturer('messagerie-direct')}`);
-        await onglet.evaluer("localStorage.removeItem('dungeoncoop:jeton'), true");
+        await onglet.evaluer("localStorage.removeItem('dungeoncoop:laissez-passer'), true");
         for (const w of [a, b, c]) w.fermer();
       }
       console.log(`direct : capture ${await onglet.capturer('direct')}`);
