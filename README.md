@@ -57,6 +57,7 @@ worker/src/session.js      le laissez-passer, vérifié par la porte et par le W
 worker/src/messagerie.js   la messagerie, sans rien de Cloudflare (testée avec Node)
 outils/serveur.mjs         un serveur pour ouvrir la page sur ton ordi
 outils/test.mjs            le test sans écran (Chrome ou Edge), avec captures
+outils/annonce.mjs         poster un message dans la messagerie depuis un terminal (Claude y signale les conflits)
 wrangler.jsonc             la publication de la page par Cloudflare
 porte/index.js             la porte : mot de passe, laissez-passer, /session
 porte/page.js              l'écran d'entrée
