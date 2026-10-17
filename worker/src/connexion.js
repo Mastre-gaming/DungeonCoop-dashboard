@@ -1,4 +1,4 @@
-// La connexion GitHub du tableau de travail (OAuth, « web application flow »).
+// La connexion GitHub du tableau de travail (GitHub App, connexion de l'utilisateur : « web application flow »).
 //
 //   GET /auth/connexion?retour=<adresse de la page>   envoie chez GitHub, qui demande l'accord
 //   GET /auth/retour?code=…&state=…                    échange le code contre un token et renvoie à la page
@@ -7,13 +7,15 @@
 // et le Worker ne garde rien. La page le garde dans le navigateur et écrit dans GitHub elle-même :
 // c'est GitHub qui décide qui a le droit (les membres qui ont l'écriture sur le repo du jeu).
 //
-// Deux réglages : GITHUB_CLIENT_ID (vars, public) et GITHUB_CLIENT_SECRET (secret), ceux de l'OAuth App.
+// Deux réglages : GITHUB_CLIENT_ID (vars, public) et GITHUB_CLIENT_SECRET (secret), ceux de la GitHub App.
 // PAGES dit vers quelles pages un token peut repartir : sans cette liste, n'importe quel site pourrait
 // demander « renvoie-moi le token » en se faisant passer pour le dashboard.
 
 import { signatureValide, signer } from './signature.js';
 
-const PORTEE = 'public_repo'; // écrire dans les issues d'un repo public : rien de plus
+// Une GitHub App ignore le scope : c'est sa permission (Issues, sur DungeonCoop seulement) qui décide.
+// Il ne servirait qu'avec une OAuth App, où public_repo ouvrirait tous les repos publics de la personne.
+const PORTEE = 'public_repo';
 const VALIDITE_MS = 10 * 60_000;
 
 export function connexionPrete(env) {

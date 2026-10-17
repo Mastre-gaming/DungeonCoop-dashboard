@@ -107,18 +107,25 @@ Utile dans l'adresse : `?demo` (données inventées), `?sans-direct` (lire GitHu
 
 Sans ça, le tableau s'affiche en lecture seule (« la connexion GitHub n'est pas encore branchée »).
 
-1. **L'OAuth App**, par un admin de l'organisation : GitHub → organisation *Mastre-gaming* → *Settings* → *Developer settings* → *OAuth Apps* → *New OAuth App*.
+C'est fait depuis le 18 octobre 2026, avec la GitHub App « DungeonCoop Dashboard ». À refaire seulement si on change d'app.
+
+1. **La GitHub App**, par un owner de l'organisation : GitHub → organisation *Mastre-gaming* → *Settings* → *Developer settings* → *GitHub Apps* → *New GitHub App*.
    - *Homepage URL* : `https://dungeoncoop-dashboard.mastredev.workers.dev`
-   - *Authorization callback URL* : `https://dungeoncoop-direct.mastredev.workers.dev/auth/retour`
-   - Puis *Generate a new client secret*.
-2. **Le Client ID** (public) va dans `worker/wrangler.jsonc`, à la ligne `GITHUB_CLIENT_ID`.
-3. **Le secret**, depuis `worker/` : `npx wrangler secret put GITHUB_CLIENT_SECRET`, et colle-le. Jamais dans un fichier.
+   - *Callback URL* : `https://dungeoncoop-direct.mastredev.workers.dev/auth/retour`
+   - **Décocher** « Expire user authorization tokens » (sinon tout le monde se reconnecte toutes les 8 heures) et laisser décoché « Request user authorization (OAuth) during installation ».
+   - *Webhook* : décocher « Active » (le dashboard a déjà ses webhooks).
+   - *Repository permissions* → **Issues : Read and write**, rien d'autre. *Only on this account*.
+   - Puis *Install App* → *Mastre-gaming* → *Only select repositories* → `DungeonCoop`. Sans cette installation, GitHub refuse les écritures.
+   - *Generate a new client secret*. Pas besoin de clé privée (*Private keys*) : le tableau ne s'en sert pas.
+   - Pourquoi pas une OAuth App : son scope `public_repo` ouvrirait au token tous les repos publics de la personne, code compris. La GitHub App le limite aux issues de DungeonCoop.
+2. **Le Client ID** (public, il commence par `Iv23`) va dans `worker/wrangler.jsonc`, à la ligne `GITHUB_CLIENT_ID`.
+3. **Le secret**, depuis `worker/`. Tape d'abord la commande sans appuyer sur Entrée, copie ensuite le secret sur GitHub, puis appuie sur Entrée : `Get-Clipboard | npx wrangler secret put GITHUB_CLIENT_SECRET --name dungeoncoop-direct` (PowerShell ; `cat /dev/clipboard` dans Git Bash). Jamais dans un fichier. Pour vérifier la paire sans se connecter : si GitHub répond `incorrect_client_credentials`, le secret n'est pas celui de cette app.
 4. `npm run deploy` dans `worker/`. Vérifier : `https://dungeoncoop-direct.mastredev.workers.dev/` dit `"connexion": true`.
 5. **Les labels des axes** existent dans le repo du jeu (`axe: combats`, `axe: histoire`…, la liste est dans `src/config.js`).
 
-**Comment ça marche :** « Se connecter avec GitHub » passe par le Worker (`/auth/connexion`, puis `/auth/retour`), qui échange le code contre un token et le rend à la page dans le fragment de l'adresse (`#jeton=…`, qui ne passe par aucun serveur). Le Worker ne garde rien. La page garde le token dans ce navigateur et écrit directement dans `api.github.com`. Le token demande `public_repo` ; c'est GitHub qui décide qui peut modifier : il faut avoir l'écriture sur le repo du jeu. `PAGES` (dans `worker/wrangler.jsonc`) liste les pages vers lesquelles un token peut repartir.
+**Comment ça marche :** « Se connecter avec GitHub » passe par le Worker (`/auth/connexion`, puis `/auth/retour`), qui échange le code contre un token et le rend à la page dans le fragment de l'adresse (`#jeton=…`, qui ne passe par aucun serveur). Le Worker ne garde rien. La page garde le token dans ce navigateur et écrit directement dans `api.github.com`. Le token ne peut toucher qu'aux issues de DungeonCoop (la permission de la GitHub App), et seulement si la personne a l'écriture sur le repo du jeu. `PAGES` (dans `worker/wrangler.jsonc`) liste les pages vers lesquelles un token peut repartir.
 
-**Sur ton ordi :** une deuxième OAuth App avec le callback `http://localhost:8787/auth/retour`, son Client ID dans `worker/.dev.vars` (`GITHUB_CLIENT_ID=…`) avec `GITHUB_CLIENT_SECRET=…`, puis la page sur `http://localhost:8000/?direct=http://localhost:8787`. En `?demo`, « Se connecter (démo) » marche sans rien de tout ça et modifie les données inventées.
+**Sur ton ordi :** une deuxième GitHub App avec le callback `http://localhost:8787/auth/retour`, son Client ID dans `worker/.dev.vars` (`GITHUB_CLIENT_ID=…`) avec `GITHUB_CLIENT_SECRET=…`, puis la page sur `http://localhost:8000/?direct=http://localhost:8787`. En `?demo`, « Se connecter (démo) » marche sans rien de tout ça et modifie les données inventées.
 
 Le plan gratuit suffit largement (100 000 requêtes par jour ; une page connectée ne coûte rien tant que rien ne se passe).
 
