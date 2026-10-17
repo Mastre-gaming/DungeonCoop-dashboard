@@ -1,0 +1,24 @@
+# Généré par npm, si on en a besoin un jour
+node_modules/
+dist/
+
+# Secrets : jamais dans le dépôt
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+.dev.vars
+
+# Cloudflare en local
+.wrangler/
+
+# Réglages perso de Claude Code
+.claude/settings.local.json
+
+# Fichiers que l'ordinateur crée tout seul
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
