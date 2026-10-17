@@ -35,7 +35,7 @@ if (fragment.has('jeton') || fragment.has('connexion-erreur')) {
 }
 session.jeton = modeDemo ? null : lire();
 
-// La connexion est-elle branchée sur le Worker ? (Il lui faut l'OAuth App : README, « Le tableau de travail ».)
+// La connexion est-elle branchée sur le Worker ? (Il lui faut la GitHub App : README, « Le tableau de travail ».)
 let disponibilite = null;
 export function connexionDisponible() {
   if (modeDemo) return Promise.resolve(true);
