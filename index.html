@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DungeonCoop · Tableau de bord</title>
-  <meta name="description" content="Le tableau de bord de l'équipe DungeonCoop : PR, conflits, push, tâches, idées et avancée.">
+  <meta name="description" content="Le tableau de bord de l'équipe DungeonCoop : PR, conflits, push, tableau de travail, tâches, idées et avancée.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 29 9.5v13L16 30 3 22.5v-13Z' fill='%232a78d6'/%3E%3Cpath d='M16 8 24 21H8Z' fill='none' stroke='white' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E">
   <script>
     // Le thème choisi (clair ou sombre) s'applique avant le premier affichage, sans flash. Sans choix : auto.
@@ -53,6 +53,11 @@
       <div class="contenu"><p class="chargement">Chargement…</p></div>
     </section>
 
+    <section class="carte" id="travail" aria-labelledby="titre-travail">
+      <h2 id="titre-travail">Tableau de travail</h2>
+      <div class="contenu"><p class="chargement">Chargement…</p></div>
+    </section>
+
     <section class="carte" id="taches" aria-labelledby="titre-taches">
       <h2 id="titre-taches">Qui fait quoi</h2>
       <div class="contenu"><p class="chargement">Chargement…</p></div>
@@ -75,7 +80,7 @@
   </main>
 
   <footer class="bas">
-    <p>Les données viennent de GitHub ; pour agir, les boutons ouvrent GitHub. <span id="limite"></span></p>
+    <p>Les données viennent de GitHub ; pour agir, les boutons ouvrent GitHub, ou le tableau de travail une fois connecté. <span id="limite"></span></p>
     <p><a href="https://github.com/Mastre-gaming/DungeonCoop-dashboard" target="_blank" rel="noopener">Le code de cette page</a> · un widget = un fichier dans <code>src/widgets/</code></p>
   </footer>
 

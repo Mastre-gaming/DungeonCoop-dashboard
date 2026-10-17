@@ -3,7 +3,8 @@
 //
 // Un widget = un fichier dans src/widgets/. Il exporte :
 //   sujets   : ce qui le rend périmé ('prs', 'commits', 'issues') ; [] s'il ne change jamais ;
-//   afficher : async (ctx) => un nœud DOM. ctx = { moi, equipe, force, pourToi(items), relancer(ms) }.
+//   afficher : async (ctx) => un nœud DOM. ctx = { moi, equipe, force, pourToi(items), relancer(ms),
+//              redessiner(), issuesChangees() }.
 // Si un widget plante, seule sa carte affiche l'erreur : les autres continuent.
 
 import { config } from './config.js';
@@ -18,8 +19,9 @@ import * as taches from './widgets/taches.js';
 import * as avancee from './widgets/avancee.js';
 import * as liens from './widgets/liens.js';
 import * as idees from './widgets/idees.js';
+import * as travail from './widgets/travail.js';
 
-const WIDGETS = { 'pull-requests': pullRequests, commits, taches, avancee, liens, idees };
+const WIDGETS = { 'pull-requests': pullRequests, commits, travail, taches, avancee, liens, idees };
 
 const CLE_MOI = 'dungeoncoop:moi';
 const parametres = new URLSearchParams(location.search);
@@ -91,6 +93,10 @@ async function dessiner(id, force) {
         rendre(id, { force: true });
       }, ms);
     },
+    // Redessiner ce widget tout de suite (un choix d'affichage, une connexion).
+    redessiner: () => rendre(id),
+    // Ce widget vient d'écrire dans les issues (tableau de travail) : on relit tout ce qui en dépend.
+    issuesChangees: () => issuesChangees(),
   };
   try {
     const noeud = await WIDGETS[id].afficher(ctx);
@@ -106,6 +112,13 @@ async function dessiner(id, force) {
   } finally {
     carte.removeAttribute('aria-busy');
     carte.dataset.rendus = String(Number(carte.dataset.rendus ?? 0) + 1);
+  }
+}
+
+function issuesChangees() {
+  github.oublier();
+  for (const [id, widget] of Object.entries(WIDGETS)) {
+    if (widget.sujets.includes('issues')) rendre(id, { force: true });
   }
 }
 

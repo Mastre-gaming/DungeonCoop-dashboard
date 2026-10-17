@@ -204,3 +204,39 @@ async function depuisDemo(chemin) {
   if (reponse === undefined) throw erreurHttp(`Démo : pas de données pour ${chemin}`, 404);
   return structuredClone(reponse);
 }
+
+// Les écritures du tableau de travail, en démo : elles changent les données inventées, comme GitHub le ferait.
+export async function ecrireDemo(methode, chemin, corps = {}) {
+  const { api } = await donneesDemo();
+  const toutes = api[`/repos/${depotJeu}/issues?state=all&per_page=100`];
+  const ouvertes = `/repos/${depotJeu}/issues?state=open&per_page=100`;
+  const maintenant = new Date().toISOString();
+  const qui = (login) => ({ login, html_url: `https://github.com/${login}` });
+  let issue;
+
+  if (methode === 'POST' && chemin === `/repos/${depotJeu}/issues`) {
+    const numero = Math.max(0, ...toutes.map((i) => i.number), ...api[ouvertes].map((i) => i.number)) + 1;
+    issue = {
+      number: numero, title: corps.title, state: 'open', user: qui('demo-brams'), labels: [], milestone: null, assignees: [],
+      html_url: `https://github.com/${depotJeu}/issues/${numero}`, reactions: { '+1': 0 }, comments: 0,
+      created_at: maintenant, updated_at: maintenant, closed_at: null,
+    };
+    toutes.unshift(issue);
+  } else {
+    const m = methode === 'PATCH' && chemin.match(new RegExp(`^/repos/${depotJeu}/issues/(\\d+)$`));
+    issue = m && toutes.find((i) => i.number === Number(m[1]));
+    if (!issue) throw erreurHttp(`Démo : on ne peut pas écrire ${methode} ${chemin}`, 404);
+  }
+
+  if (corps.title != null) issue.title = corps.title;
+  if (corps.labels) issue.labels = corps.labels.map((name) => ({ name }));
+  if (corps.assignees) issue.assignees = corps.assignees.map(qui);
+  if (corps.state && corps.state !== issue.state) {
+    issue.state = corps.state;
+    issue.closed_at = corps.state === 'closed' ? maintenant : null;
+  }
+  issue.updated_at = maintenant;
+  // La liste des issues ouvertes (celle des autres widgets) suit, PR comprises.
+  api[ouvertes] = [...toutes.filter((i) => i.state === 'open' && !i.pull_request), ...api[ouvertes].filter((i) => i.pull_request)];
+  return structuredClone(issue);
+}

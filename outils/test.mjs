@@ -204,7 +204,7 @@ async function principal() {
     // Le thème choisi s'applique dès l'ouverture, même si l'ordinateur est en clair.
     await onglet.evaluer("localStorage.setItem('dungeoncoop:theme', 'dark')");
     await onglet.aller(`${page}/?demo`);
-    await onglet.attendre('document.querySelectorAll(".carte[data-etat]").length === 6');
+    await onglet.attendre('document.querySelectorAll(".carte[data-etat]").length === document.querySelectorAll(".grille > .carte").length');
     const sombre = await onglet.evaluer("document.documentElement.dataset.theme === 'dark' && getComputedStyle(document.body).backgroundColor === 'rgb(13, 13, 13)'");
     if (!sombre) echecs.push('thème : le choix « Sombre » gardé ne s’applique pas à l’ouverture');
     console.log(`thème gardé : ${sombre ? 'ok' : 'raté'} · capture ${await onglet.capturer('theme-sombre-choisi')}`);
@@ -222,10 +222,11 @@ async function principal() {
     // 2. Les vraies données, sans vérification de contenu : aucun widget ne doit planter.
     if (option('--vrai')) {
       await onglet.aller(`${page}/?sans-direct`);
-      await onglet.attendre('document.querySelectorAll(".carte[data-etat]").length === 6');
+      await onglet.attendre('document.querySelectorAll(".carte[data-etat]").length === document.querySelectorAll(".grille > .carte").length');
       const enErreur = await onglet.evaluer('[...document.querySelectorAll(".carte[data-etat=erreur]")].map(c => c.id + " : " + c.textContent.trim())');
       echecs.push(...enErreur.map((e) => `vrai : ${e}`));
-      console.log(`vrai : ${6 - enErreur.length}/6 widgets chargés · capture ${await onglet.capturer('vrai')}`);
+      const widgets = await onglet.evaluer('document.querySelectorAll(".grille > .carte").length');
+      console.log(`vrai : ${widgets - enErreur.length}/${widgets} widgets chargés · capture ${await onglet.capturer('vrai')}`);
     }
 
     // 3. Le direct, avec un Worker lancé : un faux webhook signé doit s'afficher tout de suite.
@@ -235,7 +236,7 @@ async function principal() {
       if (!secret) throw new Error('--direct demande aussi --secret (le WEBHOOK_SECRET de worker/.dev.vars)');
       await onglet.aller(`${page}/?direct=${encodeURIComponent(direct)}`);
       await onglet.attendre('document.querySelector("#etat.direct")', 15_000);
-      await onglet.attendre('document.querySelectorAll(".carte[data-etat]").length === 6');
+      await onglet.attendre('document.querySelectorAll(".carte[data-etat]").length === document.querySelectorAll(".grille > .carte").length');
       const corps = JSON.stringify({ zen: 'Test du dashboard', hook_id: 1, repository: { name: 'DungeonCoop', full_name: 'Mastre-gaming/DungeonCoop', html_url: 'https://github.com/Mastre-gaming/DungeonCoop' }, sender: { login: 'test' } });
       const signature = `sha256=${createHmac('sha256', secret).update(corps).digest('hex')}`;
       const envoye = Date.now();
@@ -305,7 +306,7 @@ async function principal() {
       await onglet.attendre('document.querySelector(".message")?.textContent.includes("incorrect")')
         .catch(() => echecs.push('porte : un mauvais mot de passe n’affiche pas d’erreur'));
       await remplir(motDePasse);
-      await onglet.attendre('document.querySelectorAll(".carte[data-etat]").length === 6')
+      await onglet.attendre('document.querySelectorAll(".carte[data-etat]").length === document.querySelectorAll(".grille > .carte").length')
         .catch(() => echecs.push('porte : le dashboard ne s’ouvre pas après le bon mot de passe'));
       const apres = await onglet.evaluer(`({
         nom: document.querySelector('#nom-session')?.textContent,

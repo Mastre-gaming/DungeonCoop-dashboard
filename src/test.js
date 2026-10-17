@@ -128,6 +128,74 @@ export async function lancerTests({ simuler }) {
   verifier('Direct : les autres widgets ne bougent pas', rendus('commits') === avant.commits && rendus('idees') === avant.idees);
   verifier('Direct : la notification s’affiche', texte('#notifs').includes('Brams a poussé 1 commit'), texte('#notifs'));
 
+  // Tableau de travail (après le direct : ses écritures redessinent les widgets des issues)
+  const attendre = async (condition, ms = 3000) => {
+    const debut = Date.now();
+    while (Date.now() - debut < ms) {
+      if (condition()) return true;
+      await pause(50);
+    }
+    return false;
+  };
+  const vueTravail = async (vue) => {
+    $(`#travail .onglet[data-vue="${vue}"]`)?.click();
+    return attendre(() => $('#travail .travail')?.dataset.vue === vue);
+  };
+  const cartes = (colonne) => numeros(`#travail .colonne[data-colonne="${colonne}"] .carte-travail`);
+  const surCarte = (numero, action) => $(`#travail .carte-travail[data-numero="${numero}"] [data-action="${action}"]`);
+  const { config } = await import('./config.js');
+
+  await vueTravail('axe');
+  const axes = $$('#travail .colonne').map((c) => c.dataset.colonne);
+  verifier('Travail : une colonne par axe, puis « Sans axe »', egal(axes, [...config.axes.map((a) => a.label), '']), axes);
+  verifier('Travail : rangé par son label, casse comprise (« Axe: Histoire »)', cartes('axe: histoire').includes(38) && cartes('axe: histoire').includes(34), cartes('axe: histoire'));
+  const tout = numeros('#travail .carte-travail');
+  verifier('Travail : une idée prise est une carte ; une idée libre et une PR non', cartes('').includes(20) && !tout.includes(21) && !tout.includes(12), tout);
+  verifier('Travail : la priorité haute d’abord', egal(cartes('axe: combats'), [32, 30]), cartes('axe: combats'));
+  const combats = $('#travail .colonne[data-colonne="axe: combats"]');
+  verifier('Travail : l’avancée d’un axe compte ses tâches fermées', combats?.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow') === '33' && combats.textContent.includes('1/3 faites'), combats?.querySelector('.progression-axe')?.textContent);
+  verifier('Travail : sans connexion, rien à modifier', !$('#travail [data-action="prendre"]') && $('#travail [data-action="connexion"]'));
+
+  await vueTravail('etat');
+  verifier('Travail : par état, à faire / en cours / fait', egal($$('#travail .colonne').map((c) => c.dataset.colonne), ['afaire', 'encours', 'fait']));
+  verifier('Travail : personne dessus = à faire ; quelqu’un dessus = en cours', egal(cartes('afaire'), [33, 34]) && [20, 30, 32, 38].every((n) => cartes('encours').includes(n)), `${cartes('afaire')} | ${cartes('encours')}`);
+  verifier('Travail : « Fait » montre les 14 derniers jours, sans les idées refusées', egal(cartes('fait'), [35]) && texte('#travail .colonne[data-colonne="fait"]').includes('+ 1 fermée'), cartes('fait'));
+
+  $('#travail [data-action="connexion"]')?.click();
+  await attendre(() => $('#travail .travail')?.dataset.connecte === 'oui');
+  verifier('Travail : connecté, les cartes ont leurs boutons', Boolean(surCarte(34, 'prendre')) && texte('#travail .compte-github').includes('Brams'));
+
+  surCarte(34, 'prendre')?.click();
+  verifier('Travail : « Je prends » passe la carte en cours', await attendre(() => cartes('encours').includes(34)), cartes('encours'));
+  verifier('Travail : …et « Qui fait quoi » suit', await attendre(() => numeros('#taches .colonne[data-personne="demo-brams"] li').includes(34)));
+  verifier('Travail : le résultat s’affiche', texte('#travail .message-travail').includes('#34 prise'), texte('#travail .message-travail'));
+
+  surCarte(34, 'fait')?.click();
+  verifier('Travail : « Fait » ferme la carte, en tête de « Fait »', await attendre(() => cartes('fait')[0] === 34), cartes('fait'));
+
+  const transfert = new DataTransfer();
+  transfert.setData('text/plain', '33');
+  $('#travail .colonne[data-colonne="encours"]')?.dispatchEvent(new DragEvent('drop', { dataTransfer: transfert, bubbles: true, cancelable: true }));
+  verifier('Travail : glisser une carte libre dans « En cours » me la donne', await attendre(() => cartes('encours').includes(33)) && $('#travail .carte-travail[data-numero="33"] .qui')?.textContent.includes('BR'), cartes('encours'));
+
+  await vueTravail('axe');
+  const choix = $('#travail .carte-travail[data-numero="33"] select.choix-axe');
+  if (choix) {
+    choix.value = 'axe: menus';
+    choix.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  verifier('Travail : changer d’axe range la carte ailleurs', await attendre(() => cartes('axe: menus').includes(33) && !cartes('').includes(33)), cartes('axe: menus'));
+
+  const colonneHistoire = $('#travail .colonne[data-colonne="axe: histoire"]');
+  colonneHistoire?.querySelector('[data-action="ajouter"]')?.click();
+  const champ = colonneHistoire?.querySelector('.champ-carte');
+  if (champ) {
+    champ.value = 'Écrire la scène du <i>camp</i>';
+    champ.form.requestSubmit();
+  }
+  verifier('Travail : « + Carte » crée une issue dans l’axe de la colonne', await attendre(() => cartes('axe: histoire').includes(39)), cartes('axe: histoire'));
+  verifier('Travail : un titre tapé reste du texte', !$('#travail i') && texte('#travail').includes('<i>camp</i>'));
+
   const reussies = resultats.filter((r) => r.ok).length;
   window.__resultats = resultats;
   document.documentElement.dataset.test = `${reussies}/${resultats.length}`;

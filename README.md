@@ -10,6 +10,7 @@ Une seule page web pour toute l'équipe de [DungeonCoop](https://github.com/Mast
 | Pour toi | les PR qui attendent ta relecture, les conflits et tests rouges sur tes PR, tes tâches |
 | PR et conflits | une carte par PR ouverte (jeu et dashboard) : tests, conflit, relecture, depuis combien de jours elle attend |
 | Derniers push | qui a poussé quoi, sur quelle branche, il y a combien de temps |
+| Tableau de travail | les tâches en colonnes, par axe (combats, histoire, pixel art…) ou par état (à faire, en cours, fait), avec l'avancée de chaque axe. Connecté avec GitHub : glisser une carte, « Je prends », « Fait », changer d'axe, créer une carte |
 | Qui fait quoi | une colonne par personne, plus ce que personne n'a pris |
 | Avancée du projet | les jalons de `GAME_SPEC.md`, de D1 à M4, avec la part d'issues fermées |
 | Liens utiles | le repo, les docs, Sprite Painter, le lanceur… (`liens.json`) |
@@ -28,7 +29,7 @@ GitHub ──webhook──▶ Worker « direct » ──WebSocket──▶ les p
 
 - **Une porte devant la page.** Un petit Worker (`porte/`) passe devant chaque fichier : sans le mot de passe de l'équipe, on ne voit que l'écran d'entrée. Le mot de passe n'est jamais dans le repo (il est public) : c'est le secret Cloudflare `MOT_DE_PASSE`. Après l'entrée, le navigateur garde un laissez-passer signé 30 jours ; changer le mot de passe déconnecte tout le monde. Le nom tapé à l'entrée remplace « Je suis » : « Paul » est reconnu comme `PCrrfng` grâce à `equipe.json`.
 - **La messagerie** passe par le Worker direct, sur la même connexion que le direct. La page présente le laissez-passer de l'entrée ; le Worker le vérifie avec le même secret `MOT_DE_PASSE` et signe chaque message du nom tapé à l'entrée (une page ne peut pas écrire au nom d'un autre). Les 1 000 derniers messages sont gardés dans la base du Worker ; les 100 derniers s'affichent. Pour les longues discussions, il y a Discord.
-- **Les données restent dans GitHub.** La page les lit et les rassemble, elle n'en garde aucune. Pour agir (poster une idée, s'assigner, fusionner), les boutons ouvrent GitHub.
+- **Les données restent dans GitHub.** La page les lit et les rassemble, elle n'en garde aucune. Pour agir (poster une idée, fusionner), les boutons ouvrent GitHub. Seul le tableau de travail écrit, une fois connecté : dans les issues du jeu, avec le compte GitHub de la personne.
 - **En direct :** GitHub prévient le Worker à chaque événement (push, PR, relecture, issue, tests…). Le Worker vide son cache pour ce sujet et prévient les pages ouvertes, qui redessinent seulement les widgets concernés et affichent une notification.
 - **Sans le Worker**, la page lit GitHub elle-même : elle est à jour à l'ouverture, mais ne bouge plus toute seule, et GitHub limite à 60 appels par heure (d'où un cache de 5 minutes).
 - **Technique :** HTML, CSS et JavaScript simples, sans framework ni étape de build. Le Worker est un Cloudflare Worker avec un Durable Object.
@@ -44,6 +45,7 @@ equipe.json                l'équipe : une colonne « Qui fait quoi » par perso
 src/config.js              les réglages : repos suivis, adresse du Worker, jalons, labels
 src/github.js              toutes les lectures de données (démo, Worker, ou GitHub direct)
 src/direct.js              la connexion en direct au Worker
+src/connexion.js           la connexion GitHub du tableau de travail, et ses écritures dans les issues
 src/main.js                dessine les widgets et tient l'en-tête à jour
 src/theme.js               le réglage clair / auto / sombre, gardé dans le navigateur
 src/messagerie.js          la bulle 💬 et le panneau des messages
@@ -67,7 +69,7 @@ Il faut [Node.js](https://nodejs.org) 22 ou plus. Rien à installer pour la page
 ```
 node outils/serveur.mjs          puis ouvre http://localhost:8000
                                  ou http://localhost:8000/?demo pour une page remplie de données inventées
-node outils/test.mjs             les 35 vérifications, et des captures dans captures/
+node outils/test.mjs             les 73 vérifications, et des captures dans captures/
 ```
 
 Utile dans l'adresse : `?demo` (données inventées), `?sans-direct` (lire GitHub sans le Worker), `?direct=http://localhost:8787` (un Worker lancé sur ton ordi), `?moi=PCrrfng` (voir la page comme quelqu'un d'autre).
@@ -99,6 +101,23 @@ Utile dans l'adresse : `?demo` (données inventées), `?sans-direct` (lire GitHu
    - *Let me select individual events* : Branch or tag creation, Branch or tag deletion, Check runs, Check suites, Issue comments, Issues, Labels, Milestones, Pull requests, Pull request reviews, Pushes, Statuses.
    - GitHub envoie aussitôt un « ping » : les pages ouvertes affichent « Webhook branché sur … ✔ ».
 5. **Vérifier :** `https://dungeoncoop-direct.mastredev.workers.dev/` doit dire `"token": true`, `"secret": true` et `"messagerie": true`, et compter les pages connectées.
+
+### Le tableau de travail : brancher la connexion GitHub (une fois)
+
+Sans ça, le tableau s'affiche en lecture seule (« la connexion GitHub n'est pas encore branchée »).
+
+1. **L'OAuth App**, par un admin de l'organisation : GitHub → organisation *Mastre-gaming* → *Settings* → *Developer settings* → *OAuth Apps* → *New OAuth App*.
+   - *Homepage URL* : `https://dungeoncoop-dashboard.mastredev.workers.dev`
+   - *Authorization callback URL* : `https://dungeoncoop-direct.mastredev.workers.dev/auth/retour`
+   - Puis *Generate a new client secret*.
+2. **Le Client ID** (public) va dans `worker/wrangler.jsonc`, à la ligne `GITHUB_CLIENT_ID`.
+3. **Le secret**, depuis `worker/` : `npx wrangler secret put GITHUB_CLIENT_SECRET`, et colle-le. Jamais dans un fichier.
+4. `npm run deploy` dans `worker/`. Vérifier : `https://dungeoncoop-direct.mastredev.workers.dev/` dit `"connexion": true`.
+5. **Les labels des axes** existent dans le repo du jeu (`axe: combats`, `axe: histoire`…, la liste est dans `src/config.js`).
+
+**Comment ça marche :** « Se connecter avec GitHub » passe par le Worker (`/auth/connexion`, puis `/auth/retour`), qui échange le code contre un token et le rend à la page dans le fragment de l'adresse (`#jeton=…`, qui ne passe par aucun serveur). Le Worker ne garde rien. La page garde le token dans ce navigateur et écrit directement dans `api.github.com`. Le token demande `public_repo` ; c'est GitHub qui décide qui peut modifier : il faut avoir l'écriture sur le repo du jeu. `PAGES` (dans `worker/wrangler.jsonc`) liste les pages vers lesquelles un token peut repartir.
+
+**Sur ton ordi :** une deuxième OAuth App avec le callback `http://localhost:8787/auth/retour`, son Client ID dans `worker/.dev.vars` (`GITHUB_CLIENT_ID=…`) avec `GITHUB_CLIENT_SECRET=…`, puis la page sur `http://localhost:8000/?direct=http://localhost:8787`. En `?demo`, « Se connecter (démo) » marche sans rien de tout ça et modifie les données inventées.
 
 Le plan gratuit suffit largement (100 000 requêtes par jour ; une page connectée ne coûte rien tant que rien ne se passe).
 

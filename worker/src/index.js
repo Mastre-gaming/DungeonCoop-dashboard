@@ -4,12 +4,14 @@
 //   GET  /direct    les pages ouvertes s'y connectent (WebSocket) pour être prévenues tout de suite,
 //                   et pour la messagerie (avec le laissez-passer de l'entrée, vérifié avec MOT_DE_PASSE)
 //   GET  /api/…     lit l'API GitHub avec le token (5 000 appels/h) et un cache partagé par toutes les pages
+//   GET  /auth/…    la connexion GitHub du tableau de travail (connexion.js)
 //   GET  /          l'état du Worker : token et secret présents, nombre de pages connectées
 //
 // Tout l'état vit dans un seul Durable Object (« la salle ») : le cache, et la liste des pages connectées.
 
 import { DurableObject } from 'cloudflare:workers';
 import { Cache } from './cache.js';
+import { connexion, connexionPrete } from './connexion.js';
 import { depotsDe, regle, regles } from './chemins.js';
 import { traduire } from './evenements.js';
 import { Messagerie } from './messagerie.js';
@@ -43,6 +45,8 @@ export default {
         headers: { ...CORS, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
       });
     }
+
+    if (url.pathname.startsWith('/auth/') && requete.method === 'GET') return connexion(requete, env);
 
     if (url.pathname === '/' && requete.method === 'GET') {
       return Response.json(await salle.sante(), { headers: { ...CORS, 'Cache-Control': 'no-store' } });
@@ -142,6 +146,7 @@ export class Salle extends DurableObject {
       secret: Boolean(this.env.WEBHOOK_SECRET),
       messagerie: Boolean(this.env.MOT_DE_PASSE),
       messages: this.ctx.storage.sql.exec('SELECT COUNT(*) AS n FROM messages').one().n,
+      connexion: connexionPrete(this.env),
       pagesConnectees: this.ctx.getWebSockets().length,
       depots: depotsDe(this.env),
       github: this.limite,

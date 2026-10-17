@@ -76,15 +76,16 @@ export function donnees() {
   ]);
 
   // --- Issues : idées et tâches ------------------------------------------------------------
-  function issue(numero, { titre, auteur, labels = [], jalon = null, assignes = [], votes = 0, commentaires = 0, heures = 48 }) {
+  function issue(numero, { titre, auteur, labels = [], jalon = null, assignes = [], votes = 0, commentaires = 0, heures = 48, fermee = null }) {
     return {
       number: numero, title: titre, user: qui(auteur), html_url: gh(JEU, `/issues/${numero}`),
       labels: labels.map((name) => ({ name })), milestone: jalon ? { title: jalon } : null,
       assignees: assignes.map(qui), reactions: { '+1': votes }, comments: commentaires, created_at: il(heures),
+      state: fermee == null ? 'open' : 'closed', closed_at: fermee == null ? null : il(fermee), updated_at: il(fermee ?? heures),
     };
   }
 
-  api[`${base(JEU)}/issues?state=open&per_page=100`] = [
+  const ouvertes = [
     issue(20, { titre: 'Une salle d’entraînement au combat', auteur: 'demo-brams', labels: ['idée', 'priorité: haute'], jalon: 'M3', assignes: ['demo-brams'], votes: 3, commentaires: 4 }),
     issue(21, { titre: 'Des références cachées un peu partout', auteur: 'demo-cerise', labels: ['idée', 'priorité: basse'], jalon: 'Parking', votes: 2 }),
     issue(22, { titre: 'Un butin lâché par les ennemis', auteur: 'demo-cerise', labels: ['idée', 'Priorité : Moyenne'], jalon: 'M4', votes: 4, commentaires: 1 }),
@@ -92,13 +93,24 @@ export function donnees() {
     issue(24, { titre: 'Titre avec du <b>HTML</b> : il doit rester du texte', auteur: 'demo-dorn', labels: ['idée'], heures: 1 }),
     issue(25, { titre: '[Idée] Une musique de taverne', auteur: 'demo-brams', labels: ['Idee'], votes: 1, heures: 10 }),
     issue(26, { titre: 'Un mode spectateur', auteur: 'demo-dorn', labels: ['idée', 'priorité: moyenne'], jalon: 'M2 : Roll for it', votes: 1 }),
-    issue(30, { titre: 'Écrire la fiche de classe du rôdeur', auteur: 'demo-ayla', labels: ['combats'], jalon: 'D2', assignes: ['demo-ayla'] }),
-    issue(31, { titre: 'Peindre le sprite du mage', auteur: 'demo-cerise', labels: ['pixel-art'], jalon: 'D4', assignes: ['demo-cerise'] }),
-    issue(32, { titre: 'Remplir la feuille de mesure du combat papier', auteur: 'demo-dorn', labels: ['combats'], jalon: 'D2', assignes: ['demo-brams', 'demo-dorn'] }),
+    issue(30, { titre: 'Écrire la fiche de classe du rôdeur', auteur: 'demo-ayla', labels: ['combats', 'axe: combats'], jalon: 'D2', assignes: ['demo-ayla'] }),
+    issue(31, { titre: 'Peindre le sprite du mage', auteur: 'demo-cerise', labels: ['pixel-art', 'axe: pixel art'], jalon: 'D4', assignes: ['demo-cerise'] }),
+    issue(32, { titre: 'Remplir la feuille de mesure du combat papier', auteur: 'demo-dorn', labels: ['combats', 'axe: combats', 'priorité: haute'], jalon: 'D2', assignes: ['demo-brams', 'demo-dorn'] }),
     issue(33, { titre: '[Retour] Le d20 est trop petit sur l’écran', auteur: 'demo-ayla', labels: ['retour'] }),
-    issue(34, { titre: 'Choisir le nom du jeu', auteur: 'demo-dorn', jalon: 'D3' }),
-    { ...issue(12, { titre: 'Ajoute l’événement de la taverne', auteur: 'demo-brams' }), pull_request: {} }, // une PR : ni tâche ni idée
+    issue(34, { titre: 'Choisir le nom du jeu', auteur: 'demo-dorn', jalon: 'D3', labels: ['axe: histoire'] }),
+    issue(38, { titre: 'Écrire le chapitre 1 : la mine', auteur: 'demo-ayla', labels: ['Axe: Histoire'], jalon: 'D3', assignes: ['demo-ayla'] }),
   ];
+  const pr12 = { ...issue(12, { titre: 'Ajoute l’événement de la taverne', auteur: 'demo-brams' }), pull_request: {} }; // une PR : ni tâche ni idée
+  api[`${base(JEU)}/issues?state=open&per_page=100`] = [...ouvertes, pr12];
+
+  // Le tableau de travail lit aussi les fermées. Mêmes objets : une écriture en démo change les deux listes.
+  api[`${base(JEU)}/issues?state=all&per_page=100`] = [
+    ...ouvertes,
+    issue(35, { titre: 'Imprimer la grille du combat papier', auteur: 'demo-dorn', labels: ['axe: combats'], jalon: 'D1', assignes: ['demo-dorn'], heures: 90, fermee: 30 }),
+    issue(36, { titre: 'Choisir la palette des sprites', auteur: 'demo-cerise', labels: ['axe: pixel art'], assignes: ['demo-cerise'], heures: 600, fermee: 480 }), // fermée il y a 20 jours : plus dans « Fait »
+    issue(37, { titre: 'Une idée refusée', auteur: 'demo-dorn', labels: ['idée'], heures: 100, fermee: 50 }),
+  ];
+  api[`${base(JEU)}/issues?state=all&per_page=100`].push(pr12);
 
   api[`${base(JEU)}/milestones?state=all&per_page=100`] = [
     ['D1', 0, 5], ['D2', 2, 1], ['D3', 1, 0], ['D4', 1, 0], ['M2 : Roll for it', 2, 0], ['M3', 1, 0], ['M4', 1, 0], ['Parking', 1, 0],
