@@ -1,0 +1,14 @@
+{
+  "name": "dungeoncoop-direct",
+  "private": true,
+  "type": "module",
+  "description": "Le Worker « en direct » du dashboard DungeonCoop : webhooks GitHub, cache partagé, WebSocket.",
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "deploy": "wrangler deploy",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "devDependencies": {
+    "wrangler": "^4.151.1"
+  }
+}
