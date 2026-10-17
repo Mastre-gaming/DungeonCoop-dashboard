@@ -124,3 +124,66 @@ test('sans secret MOT_DE_PASSE, la porte reste fermée et le dit', async () => {
   assert.equal((await porte.fetch(entrer({ mot_de_passe: '', nom: 'Paul' }), env)).status, 503);
   assert.deepEqual(servis, []);
 });
+
+// Sprite Painter : la porte relit le demo.html de BABA sur GitHub et le sert comme une page.
+const SOURCES = 'https://raw.exemple/branche/demo.html,https://raw.exemple/main/demo.html';
+
+async function avecFauxGithub(reponses, essai) {
+  const vrai = globalThis.fetch;
+  const demandes = [];
+  globalThis.fetch = async (url) => {
+    demandes.push(String(url));
+    const r = reponses[String(url)];
+    return r ? new Response(r.corps, { status: r.status, headers: { 'Content-Type': 'text/plain; charset=utf-8' } }) : new Response('', { status: 404 });
+  };
+  try {
+    return await essai(demandes);
+  } finally {
+    globalThis.fetch = vrai;
+  }
+}
+
+async function cookieValide(env) {
+  return cookieDe(await porte.fetch(entrer({ mot_de_passe: SECRET, nom: 'Paul' }, '4.4.4.4'), env));
+}
+
+test('Sprite Painter : servi comme une page, depuis la branche de BABA', async () => {
+  const { env } = environnement();
+  env.SPRITE_PAINTER = SOURCES;
+  const cookie = await cookieValide(env);
+  await avecFauxGithub({ 'https://raw.exemple/branche/demo.html': { status: 200, corps: '<!doctype html><title>Sprite Painter</title>' } }, async (demandes) => {
+    for (const chemin of ['/sprite-painter/', '/sprite-painter']) {
+      const reponse = await porte.fetch(page(chemin, { Cookie: cookie }), env);
+      assert.equal(reponse.status, 200);
+      assert.equal(reponse.headers.get('Content-Type'), 'text/html; charset=utf-8');
+      assert.match(await reponse.text(), /Sprite Painter/);
+    }
+    assert.deepEqual(demandes, ['https://raw.exemple/branche/demo.html', 'https://raw.exemple/branche/demo.html']);
+  });
+});
+
+test('Sprite Painter : la branche fusionnée, on le trouve sur main ; nulle part, on le dit', async () => {
+  const { env } = environnement();
+  env.SPRITE_PAINTER = SOURCES;
+  const cookie = await cookieValide(env);
+  await avecFauxGithub({ 'https://raw.exemple/main/demo.html': { status: 200, corps: 'depuis main' } }, async (demandes) => {
+    assert.equal(await (await porte.fetch(page('/sprite-painter/', { Cookie: cookie }), env)).text(), 'depuis main');
+    assert.equal(demandes.length, 2);
+  });
+  await avecFauxGithub({}, async () => {
+    const reponse = await porte.fetch(page('/sprite-painter/', { Cookie: cookie }), env);
+    assert.equal(reponse.status, 502);
+    assert.match(await reponse.text(), /SPRITE_PAINTER/);
+  });
+});
+
+test('Sprite Painter : derrière le mot de passe, comme le reste', async () => {
+  const { env } = environnement();
+  env.SPRITE_PAINTER = SOURCES;
+  await avecFauxGithub({ 'https://raw.exemple/branche/demo.html': { status: 200, corps: 'secret' } }, async (demandes) => {
+    const reponse = await porte.fetch(page('/sprite-painter/'), env);
+    assert.equal(reponse.status, 401);
+    assert.match(await reponse.text(), /name="suite" value="\/sprite-painter\/"/);
+    assert.deepEqual(demandes, []);
+  });
+});

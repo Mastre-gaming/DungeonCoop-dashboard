@@ -11,5 +11,10 @@
     "directory": ".",
     "binding": "ASSETS",
     "run_worker_first": true
+  },
+  "vars": {
+    // Sprite Painter (/sprite-painter/) : le demo.html de BABA, essayé dans l'ordre. D'abord sa branche,
+    // puis main pour le jour où elle sera fusionnée.
+    "SPRITE_PAINTER": "https://raw.githubusercontent.com/Mastre-gaming/DungeonCoop/tools/lpc-sprite-mods/tools/lpc-sprite-mods/demo.html,https://raw.githubusercontent.com/Mastre-gaming/DungeonCoop/main/tools/lpc-sprite-mods/demo.html"
   }
 }

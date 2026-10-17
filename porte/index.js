@@ -34,6 +34,7 @@ export default {
         headers: { 'Cache-Control': 'no-store' },
       });
     }
+    if (session && /^\/sprite-painter\/?$/.test(url.pathname)) return spritePainter(env);
     if (session) return env.ASSETS.fetch(requete);
 
     // Pas connecté : l'écran d'entrée pour une page, un simple refus pour le reste (scripts, JSON…).
@@ -64,6 +65,28 @@ async function connexion(requete, env) {
   }
   const jeton = await creerJeton(env.MOT_DE_PASSE, nom);
   return redirection(suite, `${COOKIE}=${jeton}; Path=/; Max-Age=${DUREE_SESSION / 1000}; HttpOnly; Secure; SameSite=Lax`);
+}
+
+// Sprite Painter, l'éditeur de persos de BABA : son demo.html (tout l'éditeur et ses persos dans un fichier)
+// est relu sur GitHub, et servi comme une page (GitHub le sert en texte brut). Chaque mise à jour de BABA
+// arrive donc ici toute seule, en 5 minutes au plus. Les adresses sont dans wrangler.jsonc, essayées dans l'ordre.
+async function spritePainter(env) {
+  const sources = String(env.SPRITE_PAINTER ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+  for (const source of sources) {
+    try {
+      const reponse = await fetch(source, { cf: { cacheTtl: 300, cacheEverything: true } });
+      if (!reponse.ok) continue;
+      return new Response(reponse.body, {
+        headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, max-age=300' },
+      });
+    } catch {}
+  }
+  return html(`<!doctype html><meta charset="utf-8"><title>Sprite Painter introuvable</title>
+<body style="font:15px/1.5 system-ui,sans-serif;max-width:560px;margin:15vh auto;padding:0 16px">
+<h1>Sprite Painter introuvable</h1>
+<p>Son fichier <code>demo.html</code> n’est plus à l’adresse attendue sur GitHub (branche fusionnée ou fichier déplacé ?).
+Il faut mettre à jour <code>SPRITE_PAINTER</code> dans <code>wrangler.jsonc</code>.</p>
+<p><a href="/">Retour au tableau de bord</a></p>`, 502);
 }
 
 // Seulement une adresse de ce site (« /… »), jamais « //ailleurs.com » ni la page de connexion elle-même.

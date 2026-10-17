@@ -13,6 +13,7 @@ Une seule page web pour toute l'équipe de [DungeonCoop](https://github.com/Mast
 | Qui fait quoi | une colonne par personne, plus ce que personne n'a pris |
 | Avancée du projet | les jalons de `GAME_SPEC.md`, de D1 à M4, avec la part d'issues fermées |
 | Liens utiles | le repo, les docs, Sprite Painter, le lanceur… (`liens.json`) |
+| Sprite Painter | l'éditeur de persos de BABA, en ligne sur `/sprite-painter/` (derrière le mot de passe) |
 | Idées | les issues « Idée » rangées par jalon, puis par priorité et par votes 👍 |
 
 ## Comment ça marche
@@ -28,6 +29,8 @@ GitHub ──webhook──▶ Worker « direct » ──WebSocket──▶ les p
 - **En direct :** GitHub prévient le Worker à chaque événement (push, PR, relecture, issue, tests…). Le Worker vide son cache pour ce sujet et prévient les pages ouvertes, qui redessinent seulement les widgets concernés et affichent une notification.
 - **Sans le Worker**, la page lit GitHub elle-même : elle est à jour à l'ouverture, mais ne bouge plus toute seule, et GitHub limite à 60 appels par heure (d'où un cache de 5 minutes).
 - **Technique :** HTML, CSS et JavaScript simples, sans framework ni étape de build. Le Worker est un Cloudflare Worker avec un Durable Object.
+
+**Sprite Painter** n'est pas copié ici : la porte relit le `demo.html` de BABA sur GitHub (sa branche `tools/lpc-sprite-mods`, puis `main` le jour où elle sera fusionnée ; les adresses sont dans `wrangler.jsonc`, variable `SPRITE_PAINTER`). Quand BABA refait son `demo.html` (`npm run demo` dans l'éditeur), la version en ligne suit en 5 minutes. Tout marche dans le navigateur (peindre, calques, export PNG, crédits ; les mods se gardent dans ton navigateur) **sauf l'import** depuis le générateur LPC, qui demande le serveur de BABA sur un ordi : pour un nouveau perso, ouvre une issue avec le modèle « Nouveau personnage ».
 
 ## Les fichiers
 

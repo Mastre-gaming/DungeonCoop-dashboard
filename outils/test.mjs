@@ -47,7 +47,7 @@ async function lancerNavigateur() {
   if (!exe) throw new Error('Ni Chrome ni Edge trouvé. Indique le chemin : CHROME=… node outils/test.mjs');
   const profil = await mkdtemp(join(tmpdir(), 'dashboard-test-'));
   const options = ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${profil}`, '--no-first-run',
-    '--no-default-browser-check', '--disable-gpu', '--disable-extensions', '--hide-scrollbars'];
+    '--no-default-browser-check', '--disable-gpu', '--enable-unsafe-swiftshader', '--disable-extensions', '--hide-scrollbars'];
   if (process.env.CI) options.push('--no-sandbox'); // les machines de GitHub Actions
   const navigateur = spawn(exe, [...options, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
   const adresse = await new Promise((ok, ko) => {
@@ -237,6 +237,11 @@ async function principal() {
       if (!apres.pourToi.includes('Paul')) echecs.push(`porte : « Pour toi » ne reconnaît pas Paul (${apres.pourToi})`);
       if (apres.adresse !== '?sans-direct') echecs.push(`porte : l’entrée ne ramène pas à l’adresse demandée (${apres.adresse})`);
       console.log(`porte : entré comme ${apres.nom} · capture ${await onglet.capturer('apres-entree')}`);
+      // Sprite Painter, servi par la porte depuis le demo.html de BABA.
+      await onglet.aller(`${porte}/sprite-painter/`);
+      await onglet.attendre('document.querySelector("#import") && document.querySelector("canvas") && !document.body.innerText.includes("Loading")', 30_000)
+        .then(async () => console.log(`porte : Sprite Painter ouvert · capture ${await onglet.capturer('sprite-painter')}`))
+        .catch(() => echecs.push('porte : Sprite Painter ne s’ouvre pas sur /sprite-painter/'));
       await onglet.aller(`${porte}/deconnexion`);
       await onglet.attendre('document.querySelector("input[type=password]")')
         .then(() => console.log('porte : déconnexion ok'))
