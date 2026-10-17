@@ -101,6 +101,9 @@ h1, h2, h3 { margin: 0; line-height: 1.2; }
 
 .commandes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .moi { display: inline-flex; align-items: center; gap: 8px; color: var(--texte-2); font-size: 0.9rem; }
+.moi[hidden], .session[hidden] { display: none; }
+.session { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; }
+.session a { margin-left: 4px; font-size: 0.85rem; }
 select {
   font: inherit;
   color: var(--texte);
@@ -164,6 +167,31 @@ select {
   font-size: 0.9rem;
 }
 @media (max-width: 1400px) { .bandeau-demo { margin-left: 24px; margin-right: 24px; } }
+
+/* Le réglage du thème : trois boutons collés, celui qui est choisi est en relief. */
+.theme {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--bord);
+}
+.theme button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--texte-2);
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  padding: 4px 9px;
+  cursor: pointer;
+}
+.theme button:hover { color: var(--texte); }
+.theme button[aria-pressed="true"] { color: var(--texte); background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12); font-weight: 600; }
+@media (max-width: 640px) { .theme .libelle { display: none; } }
 
 /* --- Pour toi -------------------------------------------------------------------------- */
 
@@ -468,6 +496,92 @@ a.pastille:hover { text-decoration: none; outline: 1px solid var(--bord); }
 a.notif:hover { text-decoration: none; background: var(--surface-2); }
 @keyframes entre { from { transform: translateY(8px); opacity: 0; } }
 
+/* --- La messagerie : la bulle en bas à gauche, le panneau au-dessus ------------------- */
+
+.bulle-messages {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 11;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--bord);
+  background: var(--surface);
+  color: var(--texte);
+  font: inherit;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+.bulle-messages:hover { background: var(--surface-2); }
+.bulle-messages[aria-expanded="true"] { border-color: var(--accent); }
+.bulle-messages .non-lus {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--grave);
+  color: #fff;
+  font-size: 0.75rem;
+  line-height: 20px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.bulle-messages .non-lus[hidden] { display: none; }
+
+.messagerie {
+  position: fixed;
+  left: 16px;
+  bottom: 72px;
+  z-index: 11;
+  width: min(400px, calc(100vw - 32px));
+  height: min(560px, calc(100vh - 100px));
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--bord);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+.messagerie[hidden] { display: none; }
+.messagerie header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--trait); }
+.messagerie h2 { font-size: 1rem; }
+.messagerie .statut { font-size: 0.8rem; color: var(--muet); }
+.messagerie .statut.en-direct { color: var(--texte-2); }
+.messagerie .fermer { margin-left: auto; font: inherit; color: var(--texte-2); background: none; border: 0; border-radius: 6px; padding: 2px 8px; cursor: pointer; }
+.messagerie .fermer:hover { background: var(--surface-2); color: var(--texte); }
+.fil-messages { flex: 1; overflow-y: auto; list-style: none; margin: 0; padding: 12px 14px; display: grid; align-content: start; gap: 10px; }
+.msg { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; }
+.msg .corps { min-width: 0; padding: 6px 10px; border-radius: 10px; background: var(--surface-2); }
+.msg.mien .corps { background: var(--accent-doux); }
+.msg.me-mentionne .corps { box-shadow: inset 3px 0 0 var(--attention); }
+.msg .qui { font-size: 0.78rem; color: var(--muet); }
+.msg .qui strong { color: var(--texte); font-size: 0.85rem; }
+.msg p { margin: 2px 0 0; font-size: 0.9rem; overflow-wrap: anywhere; }
+.msg .mention { font-weight: 600; color: var(--accent-texte); }
+.msg .mention.moi { padding: 0 3px; border-radius: 4px; background: var(--attention); color: #0b0b0b; }
+.vide-messages { color: var(--muet); font-size: 0.9rem; }
+.messagerie .info { margin: 0; padding: 8px 14px; font-size: 0.85rem; color: var(--texte-2); background: var(--surface-2); }
+.messagerie .info[hidden], .erreur-envoi[hidden] { display: none; }
+.erreur-envoi { margin: 0; padding: 6px 14px; font-size: 0.82rem; color: var(--texte); border-left: 3px solid var(--grave); }
+.ecrire { display: flex; gap: 8px; align-items: flex-end; padding: 10px 14px 12px; border-top: 1px solid var(--trait); }
+.ecrire textarea {
+  flex: 1;
+  resize: none;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--texte);
+  background: var(--page);
+  border: 1px solid var(--bord);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.ecrire textarea:disabled, .ecrire .bouton:disabled { opacity: 0.55; cursor: not-allowed; }
+body { padding-bottom: 72px; } /* la bulle ne cache jamais le bas de la page */
+
 /* --- Bas de page et téléphone --------------------------------------------------------- */
 
 .bas { max-width: 1400px; margin: 0 auto; padding: 0 24px 32px; color: var(--muet); font-size: 0.82rem; }
@@ -480,6 +594,8 @@ a.notif:hover { text-decoration: none; background: var(--surface-2); }
   .bas { padding: 0 16px 24px; }
   .carte { padding: 14px; }
   .colonnes { grid-auto-columns: minmax(78vw, 1fr); }
+  .bulle-messages .libelle { display: none; }
+  .messagerie { left: 8px; right: 8px; width: auto; bottom: 68px; height: calc(100vh - 84px); }
 }
 
 @media (forced-colors: active) {

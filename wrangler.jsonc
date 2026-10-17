@@ -1,10 +1,20 @@
 // La page du dashboard, publiée par Cloudflare (Workers Builds) à chaque fusion sur main,
-// avec un lien d'aperçu pour chaque autre branche. Rien que des fichiers statiques : le direct vit dans worker/.
+// avec un lien d'aperçu pour chaque autre branche. Le direct vit à part, dans worker/.
+// La porte (porte/index.js) passe devant chaque fichier : sans le mot de passe, on ne voit que l'écran d'entrée.
+// Le mot de passe est un secret : npx wrangler secret put MOT_DE_PASSE (jamais dans ce fichier).
 // Le nom doit être exactement celui du projet dans Cloudflare (Workers & Pages), sinon le build refuse.
 {
   "name": "dungeoncoop-dashboard",
+  "main": "porte/index.js",
   "compatibility_date": "2026-06-01",
   "assets": {
-    "directory": "."
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "vars": {
+    // Sprite Painter (/sprite-painter/) : le demo.html de BABA, essayé dans l'ordre. D'abord sa branche,
+    // puis main pour le jour où elle sera fusionnée.
+    "SPRITE_PAINTER": "https://raw.githubusercontent.com/Mastre-gaming/DungeonCoop/tools/lpc-sprite-mods/tools/lpc-sprite-mods/demo.html,https://raw.githubusercontent.com/Mastre-gaming/DungeonCoop/main/tools/lpc-sprite-mods/demo.html"
   }
 }

@@ -31,6 +31,10 @@ export function demarrer(port = 8000) {
       reponse.writeHead(404).end();
       return;
     }
+    if (chemin === '/session') {
+      reponse.writeHead(204).end(); // pas de porte ici (porte/ est le Worker de Cloudflare) : pas de session
+      return;
+    }
     try {
       if ((await stat(fichier)).isDirectory()) fichier = join(fichier, 'index.html');
       const corps = await readFile(fichier);

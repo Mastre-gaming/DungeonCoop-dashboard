@@ -19,7 +19,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { demarrer } from './serveur.mjs';
 
-const CAPTURES = fileURLToPath(new URL('../captures/', import.meta.url));
+// CAPTURES=… pour les mettre ailleurs : utile avec « wrangler dev », qui redémarre à chaque fichier écrit dans le repo.
+const CAPTURES = process.env.CAPTURES ?? fileURLToPath(new URL('../captures/', import.meta.url));
 const pause = (ms) => new Promise((ok) => setTimeout(ok, ms));
 const arguments_ = process.argv.slice(2);
 const option = (nom) => {
@@ -46,7 +47,7 @@ async function lancerNavigateur() {
   if (!exe) throw new Error('Ni Chrome ni Edge trouvé. Indique le chemin : CHROME=… node outils/test.mjs');
   const profil = await mkdtemp(join(tmpdir(), 'dashboard-test-'));
   const options = ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${profil}`, '--no-first-run',
-    '--no-default-browser-check', '--disable-gpu', '--disable-extensions', '--hide-scrollbars'];
+    '--no-default-browser-check', '--disable-gpu', '--enable-unsafe-swiftshader', '--disable-extensions', '--hide-scrollbars'];
   if (process.env.CI) options.push('--no-sandbox'); // les machines de GitHub Actions
   const navigateur = spawn(exe, [...options, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
   const adresse = await new Promise((ok, ko) => {
@@ -142,6 +143,41 @@ async function ouvrirOnglet(dt) {
   };
 }
 
+// Une connexion WebSocket au Worker, qui garde ce qu'elle reçoit.
+async function connexionWs(url) {
+  const socket = new WebSocket(url);
+  const recus = [];
+  const attentes = [];
+  socket.addEventListener('message', (e) => {
+    let m;
+    try {
+      m = JSON.parse(e.data);
+    } catch {
+      return;
+    }
+    recus.push(m);
+    for (const a of [...attentes]) if (a.condition(m)) a.ok(m);
+  });
+  await new Promise((ok, ko) => {
+    socket.addEventListener('open', ok);
+    socket.addEventListener('error', () => ko(new Error(`WebSocket injoignable : ${url}`)));
+  });
+  return {
+    recus,
+    envoyer: (objet) => socket.send(JSON.stringify(objet)),
+    attendre(condition, ms = 5000) {
+      const deja = recus.find(condition);
+      if (deja) return Promise.resolve(deja);
+      return new Promise((ok) => {
+        const attente = { condition, ok };
+        attentes.push(attente);
+        setTimeout(() => ok(null), ms);
+      });
+    },
+    fermer: () => socket.close(),
+  };
+}
+
 async function principal() {
   const serveur = await demarrer(0);
   const page = `http://127.0.0.1:${serveur.address().port}`;
@@ -163,6 +199,24 @@ async function principal() {
       echecs.push(...rates);
       if (debordement > 0) echecs.push(`${nom} : la page déborde de ${debordement} px en largeur`);
       console.log(`${nom} : ${score} vérifications · capture ${await onglet.capturer(nom)}`);
+    }
+
+    // Le thème choisi s'applique dès l'ouverture, même si l'ordinateur est en clair.
+    await onglet.evaluer("localStorage.setItem('dungeoncoop:theme', 'dark')");
+    await onglet.aller(`${page}/?demo`);
+    await onglet.attendre('document.querySelectorAll(".carte[data-etat]").length === 6');
+    const sombre = await onglet.evaluer("document.documentElement.dataset.theme === 'dark' && getComputedStyle(document.body).backgroundColor === 'rgb(13, 13, 13)'");
+    if (!sombre) echecs.push('thème : le choix « Sombre » gardé ne s’applique pas à l’ouverture');
+    console.log(`thème gardé : ${sombre ? 'ok' : 'raté'} · capture ${await onglet.capturer('theme-sombre-choisi')}`);
+    await onglet.evaluer("localStorage.removeItem('dungeoncoop:theme')");
+
+    // Le panneau de la messagerie ouvert, sur bureau et sur téléphone (pour voir).
+    for (const [nom, vue] of [['messagerie', {}], ['messagerie-telephone', { largeur: 390, hauteur: 844 }]]) {
+      await onglet.aller(`${page}/?demo&moi=demo-brams`, vue);
+      await onglet.attendre('document.querySelector("#bulle-messages")');
+      await onglet.evaluer('document.querySelector("#bulle-messages").click(), true');
+      await pause(150);
+      console.log(`${nom} : capture ${await onglet.capturer(nom)}`);
     }
 
     // 2. Les vraies données, sans vérification de contenu : aucun widget ne doit planter.
@@ -192,7 +246,90 @@ async function principal() {
         .catch(() => echecs.push('direct : la notification n’est pas arrivée en 5 s'));
       const faux = await fetch(`${direct}/webhook`, { method: 'POST', body: corps, headers: { 'X-GitHub-Event': 'ping', 'X-Hub-Signature-256': `sha256=${'0'.repeat(64)}` } });
       if (faux.status !== 401) echecs.push(`direct : un webhook mal signé reçoit ${faux.status} au lieu de 401`);
+
+      // La messagerie, si on donne le MOT_DE_PASSE du Worker (worker/.dev.vars).
+      const motDePasse = option('--mot-de-passe');
+      if (motDePasse) {
+        const { creerJeton } = await import('../worker/src/session.js');
+        const jeton = await creerJeton(motDePasse, 'Paul');
+        const adresseWs = `${direct.replace(/^http/, 'ws')}/direct`;
+        const a = await connexionWs(adresseWs);
+        const b = await connexionWs(adresseWs);
+        const c = await connexionWs(adresseWs);
+        a.envoyer({ type: 'jeton', jeton });
+        c.envoyer({ type: 'jeton', jeton: await creerJeton('pas-le-bon', 'Pirate') });
+        const bienvenue = await a.attendre((m) => m.type === 'bienvenue');
+        if (bienvenue?.nom !== 'Paul') echecs.push('messagerie : le bon laissez-passer n’ouvre pas la messagerie');
+        if (!(await c.attendre((m) => m.type === 'refuse'))) echecs.push('messagerie : un faux laissez-passer n’est pas refusé');
+        const texteNode = `Test depuis Node, vers la #12 (${Date.now()})`;
+        a.envoyer({ type: 'envoyer', ref: 't1', texte: texteNode });
+        const recu = await a.attendre((m) => m.type === 'message' && m.message.texte === texteNode);
+        if (recu?.message.auteur !== 'Paul') echecs.push('messagerie : le message n’est pas signé par le laissez-passer');
+        await pause(500);
+        if (b.recus.some((m) => m.type === 'message')) echecs.push('messagerie : une page sans mot de passe a reçu un message');
+        // La page, avec le même laissez-passer, voit le message et peut répondre.
+        await onglet.evaluer(`localStorage.setItem('dungeoncoop:jeton', ${JSON.stringify(jeton)}), true`);
+        await onglet.aller(`${page}/?direct=${encodeURIComponent(direct)}`);
+        await onglet.attendre('document.querySelector("#bulle-messages")');
+        await onglet.evaluer('document.querySelector("#bulle-messages").click(), true');
+        await onglet.attendre(`[...document.querySelectorAll('#messagerie .msg')].some((m) => m.textContent.includes(${JSON.stringify(texteNode)}))`, 10_000)
+          .catch(() => echecs.push('messagerie : la page ne montre pas le message envoyé depuis Node'));
+        const texteBrowser = `Réponse de la page (${Date.now()})`;
+        await onglet.evaluer(`(() => { const z = document.querySelector('#messagerie textarea'); z.value = ${JSON.stringify(texteBrowser)}; document.querySelector('#messagerie form').requestSubmit(); return true; })()`);
+        const reponse = await a.attendre((m) => m.type === 'message' && m.message.texte === texteBrowser, 5000);
+        if (reponse?.message.auteur !== 'Paul') echecs.push('messagerie : le message de la page n’arrive pas aux autres');
+        else console.log('messagerie : Node → page → Node, ok ; une page sans mot de passe ne reçoit rien');
+        console.log(`messagerie : capture ${await onglet.capturer('messagerie-direct')}`);
+        await onglet.evaluer("localStorage.removeItem('dungeoncoop:jeton'), true");
+        for (const w of [a, b, c]) w.fermer();
+      }
       console.log(`direct : capture ${await onglet.capturer('direct')}`);
+    }
+
+    // 4. La porte, avec la page servie par wrangler (npx wrangler dev à la racine, MOT_DE_PASSE dans .dev.vars).
+    const porte = option('--porte');
+    if (porte) {
+      const motDePasse = option('--mot-de-passe');
+      if (!motDePasse) throw new Error('--porte demande aussi --mot-de-passe (le MOT_DE_PASSE de .dev.vars)');
+      const nombreErreurs = onglet.erreurs.length;
+      await onglet.aller(`${porte}/?sans-direct`);
+      await onglet.attendre('document.querySelector("input[type=password]")');
+      console.log(`porte : écran d’entrée · capture ${await onglet.capturer('entree')}`);
+      const remplir = (mdp) => onglet.evaluer(`(() => {
+        document.querySelector('input[name=mot_de_passe]').value = ${JSON.stringify(mdp)};
+        document.querySelector('input[name=nom]').value = 'Paul';
+        document.querySelector('form').submit();
+        return true;
+      })()`);
+      await remplir('pas-le-bon');
+      await onglet.attendre('document.querySelector(".message")?.textContent.includes("incorrect")')
+        .catch(() => echecs.push('porte : un mauvais mot de passe n’affiche pas d’erreur'));
+      await remplir(motDePasse);
+      await onglet.attendre('document.querySelectorAll(".carte[data-etat]").length === 6')
+        .catch(() => echecs.push('porte : le dashboard ne s’ouvre pas après le bon mot de passe'));
+      const apres = await onglet.evaluer(`({
+        nom: document.querySelector('#nom-session')?.textContent,
+        sessionVisible: !document.querySelector('#session')?.hidden,
+        choixCache: document.querySelector('#choix-moi')?.hidden,
+        pourToi: document.querySelector('#pour-toi h2')?.textContent ?? '',
+        adresse: location.search,
+      })`);
+      if (apres.nom !== 'Paul' || !apres.sessionVisible || !apres.choixCache) echecs.push(`porte : le nom n’est pas affiché (${JSON.stringify(apres)})`);
+      if (!apres.pourToi.includes('Paul')) echecs.push(`porte : « Pour toi » ne reconnaît pas Paul (${apres.pourToi})`);
+      if (apres.adresse !== '?sans-direct') echecs.push(`porte : l’entrée ne ramène pas à l’adresse demandée (${apres.adresse})`);
+      console.log(`porte : entré comme ${apres.nom} · capture ${await onglet.capturer('apres-entree')}`);
+      // Sprite Painter, servi par la porte depuis le demo.html de BABA.
+      await onglet.aller(`${porte}/sprite-painter/`);
+      await onglet.attendre('document.querySelector("#import") && document.querySelector("canvas") && !document.body.innerText.includes("Loading")', 30_000)
+        .then(async () => console.log(`porte : Sprite Painter ouvert · capture ${await onglet.capturer('sprite-painter')}`))
+        .catch(() => echecs.push('porte : Sprite Painter ne s’ouvre pas sur /sprite-painter/'));
+      await onglet.aller(`${porte}/deconnexion`);
+      await onglet.attendre('document.querySelector("input[type=password]")')
+        .then(() => console.log('porte : déconnexion ok'))
+        .catch(() => echecs.push('porte : la déconnexion ne ramène pas à l’écran d’entrée'));
+      // Les 401 de la page d'entrée sont voulus : on ne les compte pas comme des erreurs de la page.
+      onglet.erreurs.splice(nombreErreurs, onglet.erreurs.length - nombreErreurs,
+        ...onglet.erreurs.slice(nombreErreurs).filter((e) => !/401|Unauthorized/.test(e)));
     }
 
     if (onglet.erreurs.length) echecs.push(...onglet.erreurs.map((e) => `erreur dans la page : ${e}`));

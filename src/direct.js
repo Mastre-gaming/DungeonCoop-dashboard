@@ -1,9 +1,11 @@
-// La connexion « en direct » au Worker : il envoie un message dès que GitHub lui signale un push,
-// une PR, une relecture, une issue… La page redessine alors seulement les widgets concernés.
+// La connexion « en direct » au Worker. Il envoie un message dès que GitHub lui signale un push, une PR,
+// une relecture, une issue… La page redessine alors seulement les widgets concernés. La même connexion
+// porte la messagerie (src/messagerie.js).
 //
-// Un message du Worker : { type: 'maj', sujets: ['prs', 'commits', 'issues'], messages: [{ texte, lien, depot, acteur }] }
+// Messages du Worker : { type: 'maj', sujets: ['prs', 'commits', 'issues'], messages: [{ texte, lien, depot }] },
+// et ceux de la messagerie (bienvenue, message, refuse, envoye, erreur).
 
-export function brancher(adresse, { surMessage, surEtat }) {
+export function brancher(adresse, { surMessage, surEtat, surOuverture = () => {} }) {
   const url = `${adresse.replace(/^http/, 'ws')}/direct`;
   let socket = null;
   let attente = 1000;
@@ -26,13 +28,17 @@ export function brancher(adresse, { surMessage, surEtat }) {
       // Un « ping » toutes les 30 s garde la connexion ouverte ; le Worker répond « pong » sans se réveiller.
       clearInterval(battement);
       battement = setInterval(() => socket?.readyState === WebSocket.OPEN && socket.send('ping'), 30_000);
+      surOuverture();
     });
     socket.addEventListener('message', (evenement) => {
       if (evenement.data === 'pong') return;
+      let message;
       try {
-        const message = JSON.parse(evenement.data);
-        if (message.type === 'maj') surMessage(message);
-      } catch {}
+        message = JSON.parse(evenement.data);
+      } catch {
+        return;
+      }
+      surMessage(message);
     });
     socket.addEventListener('close', () => {
       clearInterval(battement);
@@ -56,4 +62,13 @@ export function brancher(adresse, { surMessage, surEtat }) {
   });
 
   ouvrir();
+
+  return {
+    // Envoie un objet au Worker ; false si la connexion n'est pas ouverte.
+    envoyer(objet) {
+      if (socket?.readyState !== WebSocket.OPEN) return false;
+      socket.send(JSON.stringify(objet));
+      return true;
+    },
+  };
 }

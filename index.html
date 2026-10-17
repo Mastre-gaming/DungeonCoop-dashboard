@@ -6,6 +6,10 @@
   <title>DungeonCoop · Tableau de bord</title>
   <meta name="description" content="Le tableau de bord de l'équipe DungeonCoop : PR, conflits, push, tâches, idées et avancée.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 29 9.5v13L16 30 3 22.5v-13Z' fill='%232a78d6'/%3E%3Cpath d='M16 8 24 21H8Z' fill='none' stroke='white' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <script>
+    // Le thème choisi (clair ou sombre) s'applique avant le premier affichage, sans flash. Sans choix : auto.
+    try { const t = localStorage.getItem('dungeoncoop:theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch {}
+  </script>
   <link rel="stylesheet" href="style.css">
   <script type="module" src="src/main.js"></script>
 </head>
@@ -22,8 +26,14 @@
       </div>
     </div>
     <div class="commandes">
-      <label class="moi">Je suis <select id="moi"><option value="">—</option></select></label>
+      <label class="moi" id="choix-moi">Je suis <select id="moi"><option value="">—</option></select></label>
+      <span id="session" class="session" hidden><span class="muet">Connecté :</span> <strong id="nom-session"></strong> <a href="/deconnexion">Se déconnecter</a></span>
       <span id="etat" class="etat github" title=""><span class="point" aria-hidden="true"></span><span>Chargement…</span></span>
+      <div id="theme" class="theme" role="group" aria-label="Thème de la page">
+        <button type="button" data-theme-choix="light" title="Thème clair"><span aria-hidden="true">☀</span><span class="libelle">Clair</span></button>
+        <button type="button" data-theme-choix="auto" title="Comme l’ordinateur"><span aria-hidden="true">◐</span><span class="libelle">Auto</span></button>
+        <button type="button" data-theme-choix="dark" title="Thème sombre"><span aria-hidden="true">☾</span><span class="libelle">Sombre</span></button>
+      </div>
       <button id="rafraichir" type="button" class="bouton discret">Rafraîchir</button>
     </div>
   </header>

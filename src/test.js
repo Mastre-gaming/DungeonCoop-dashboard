@@ -50,6 +50,7 @@ export async function lancerTests({ simuler }) {
   verifier('Idées : la priorité décide, les votes départagent', egal(numeros('#idees .colonne[data-jalon="M2"] li'), [23, 26]), numeros('#idees .colonne[data-jalon="M2"] li'));
   verifier('Idées : « Priorité : Moyenne » est lu comme « moyenne »', $('#idees li[data-numero="22"]')?.dataset.priorite === 'moyenne');
   verifier('Idées : un titre avec du HTML reste du texte', !$('#idees b') && texte('#idees').includes('<b>HTML</b>'));
+  verifier('Idées : le « [Idée] » du modèle n’est pas répété', $('#idees li[data-numero="25"] .titre')?.textContent === 'Une musique de taverne', $('#idees li[data-numero="25"] .titre')?.textContent);
 
   // Avancée
   const jalon = (id) => $(`#avancee .jalon[data-jalon="${id}"]`);
@@ -76,6 +77,47 @@ export async function lancerTests({ simuler }) {
   } catch (erreur) {
     verifier('Liens : liens.json se lit', false, erreur.message);
   }
+
+  // Le thème : clair, sombre, auto.
+  const fond = () => getComputedStyle(document.body).backgroundColor;
+  const theme = (choix) => $(`[data-theme-choix="${choix}"]`);
+  const stocke = () => { try { return localStorage.getItem('dungeoncoop:theme'); } catch { return 'stockage interdit'; } };
+  theme('dark').click();
+  verifier('Thème : « Sombre » passe la page en sombre', document.documentElement.dataset.theme === 'dark' && fond() === 'rgb(13, 13, 13)', fond());
+  theme('light').click();
+  verifier('Thème : « Clair » passe la page en clair', document.documentElement.dataset.theme === 'light' && fond() === 'rgb(244, 243, 239)', fond());
+  verifier('Thème : le choix est gardé dans le navigateur', stocke() === 'light', stocke());
+  verifier('Thème : le bouton choisi est marqué', theme('light').getAttribute('aria-pressed') === 'true' && theme('auto').getAttribute('aria-pressed') === 'false');
+  theme('auto').click();
+  verifier('Thème : « Auto » revient au réglage de l’ordinateur', !('theme' in document.documentElement.dataset) && stocke() === null, stocke());
+
+  // La messagerie (moi = Brams ; en démo, les messages restent dans la page).
+  const bulle = $('#bulle-messages');
+  const panneau = $('#messagerie');
+  verifier('Messagerie : la bulle est là, le panneau fermé', bulle && panneau?.hidden);
+  verifier('Messagerie : les 3 messages des autres sont non lus', texte('#bulle-messages .non-lus') === '3', texte('#bulle-messages .non-lus'));
+  bulle.click();
+  verifier('Messagerie : la bulle ouvre le panneau', !panneau.hidden && bulle.getAttribute('aria-expanded') === 'true');
+  verifier('Messagerie : l’historique', $$('#messagerie .msg').length === 3, $$('#messagerie .msg').length);
+  verifier('Messagerie : ouvrir, c’est lire', $('#bulle-messages .non-lus').hidden);
+  verifier('Messagerie : #12 mène à l’issue ou la PR du jeu', $('#messagerie a.ref')?.href.endsWith('/Mastre-gaming/DungeonCoop/issues/12'), $('#messagerie a.ref')?.href);
+  verifier('Messagerie : une adresse devient un lien', $$('#messagerie .msg a').some((a) => a.href === 'https://example.org/chevalier.png'));
+  verifier('Messagerie : @Brams me mentionne', $('#messagerie .mention.moi')?.textContent === '@Brams' && $('#messagerie .msg[data-id="3"]')?.classList.contains('me-mentionne'));
+  verifier('Messagerie : le HTML reste du texte, les retours à la ligne restent', !$('#messagerie .msg b') && texte('#messagerie').includes('<b>pas du HTML</b>') && $('#messagerie .msg[data-id="3"] br'));
+  const zone = $('#messagerie textarea');
+  zone.value = 'Je prends la #33';
+  zone.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  await pause(30);
+  const dernier = $$('#messagerie .msg').at(-1);
+  verifier('Messagerie : Entrée envoie, signé de mon nom', dernier?.classList.contains('mien') && dernier.querySelector('.qui strong')?.textContent === 'Brams' && dernier.textContent.includes('Je prends la #33'), dernier?.textContent);
+  verifier('Messagerie : la zone se vide après l’envoi', zone.value === '');
+  $('#messagerie .fermer').click();
+  window.__messagerie.recevoir({ type: 'message', message: { id: 99, auteur: 'Ayla', texte: '@brams tu relis ?', t: Date.now() } });
+  await pause(30);
+  verifier('Messagerie : un message reçu panneau fermé compte comme non lu', texte('#bulle-messages .non-lus') === '1', texte('#bulle-messages .non-lus'));
+  verifier('Messagerie : une mention fait une notification', texte('#notifs').includes('Ayla te mentionne'), texte('#notifs'));
+  window.__messagerie.recevoir({ type: 'message', message: { id: 99, auteur: 'Ayla', texte: '@brams tu relis ?', t: Date.now() } });
+  verifier('Messagerie : un même message reçu deux fois ne compte qu’une fois', texte('#bulle-messages .non-lus') === '1' && $$('#messagerie .msg').length === 5);
 
   // Le direct : un message du Worker ne redessine que les widgets concernés, et s'affiche en notification.
   const rendus = (id) => Number($(`#${id}`).dataset.rendus);

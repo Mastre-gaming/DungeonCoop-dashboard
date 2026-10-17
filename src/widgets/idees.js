@@ -55,8 +55,10 @@ function comparer(a, b) {
 
 function carte(idee, ctx) {
   const priorite = prioriteDe(idee);
+  // Le modèle « Idée » met « [Idée] » devant le titre : inutile ici, la colonne le dit déjà.
+  const titre = idee.title.replace(/^\s*\[\s*id[ée]e\s*\]\s*/i, '') || idee.title;
   return el('li', { class: 'idee', dataset: { numero: idee.number, priorite: priorite ?? '' } },
-    lienExterne(idee.html_url, { class: 'titre' }, idee.title),
+    lienExterne(idee.html_url, { class: 'titre' }, titre),
     el('div', { class: 'meta' },
       priorite ? el('span', { class: `prio prio-${normaliser(priorite)}` }, `priorité ${priorite}`) : el('span', { class: 'prio' }, 'sans priorité'),
       el('span', { class: 'votes', title: `${votes(idee)} vote${votes(idee) > 1 ? 's' : ''} 👍` }, '👍 ', votes(idee)),

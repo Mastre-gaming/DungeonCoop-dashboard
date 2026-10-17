@@ -9,7 +9,9 @@
 import { config } from './config.js';
 import * as github from './github.js';
 import { brancher } from './direct.js';
-import { el, lienExterne, nomDe, heure, tagDepot } from './outils.js';
+import { installerTheme } from './theme.js';
+import { installerMessagerie } from './messagerie.js';
+import { el, lienExterne, nomDe, heure, tagDepot, normaliser } from './outils.js';
 import * as pullRequests from './widgets/pull-requests.js';
 import * as commits from './widgets/commits.js';
 import * as taches from './widgets/taches.js';
@@ -24,6 +26,7 @@ const parametres = new URLSearchParams(location.search);
 const etat = {
   moi: parametres.get('moi') ?? lireStockage(CLE_MOI) ?? '',
   equipe: [],
+  session: null, // { nom, jeton } quand on est entré avec le mot de passe
   pourToi: new Map(), // id du widget → ce qui attend « moi » dans ce widget
   derniereMaj: null,
   direct: github.modeDirect ? 'connexion' : null,
@@ -136,7 +139,20 @@ function dessinerPourToi() {
 
 // --- L'en-tête : qui je suis, l'état des données ----------------------------------------------
 
+// Le nom tapé à l'entrée → le pseudo GitHub d'equipe.json (« Paul » → « PCrrfng »), pour reconnaître ses PR et tâches.
+function loginDe(nom) {
+  const membre = etat.equipe.find((m) => normaliser(m.nom) === normaliser(nom) || normaliser(m.github) === normaliser(nom));
+  return membre?.github ?? nom;
+}
+
 function dessinerChoixMoi() {
+  if (etat.session) {
+    // Entré avec le mot de passe : le nom vient de l'entrée. Pour changer, on se déconnecte.
+    document.getElementById('choix-moi').hidden = true;
+    document.getElementById('session').hidden = false;
+    document.getElementById('nom-session').textContent = etat.session.nom;
+    return;
+  }
   const choix = document.getElementById('moi');
   const options = [el('option', { value: '' }, '—')];
   const logins = etat.equipe.map((m) => m.github);
@@ -146,6 +162,7 @@ function dessinerChoixMoi() {
   choix.onchange = () => {
     etat.moi = choix.value;
     ecrireStockage(CLE_MOI, etat.moi);
+    messagerie?.majMoi(etat.moi);
     etat.pourToi.clear();
     dessinerPourToi();
     toutRendre();
@@ -212,7 +229,10 @@ function surMessageDirect(message) {
 
 // --- Démarrage -------------------------------------------------------------------------------
 
+let messagerie = null;
+
 async function demarrer() {
+  installerTheme();
   if (github.modeDemo) {
     document.getElementById('bandeau-demo').hidden = false;
     document.documentElement.dataset.mode = 'demo';
@@ -225,17 +245,37 @@ async function demarrer() {
   } catch (erreur) {
     console.error('equipe.json :', erreur);
   }
+  etat.session = await github.session();
+  if (etat.session && !parametres.has('moi')) etat.moi = loginDe(etat.session.nom);
   dessinerChoixMoi();
   dessinerPourToi();
   dessinerEtat();
+
+  // La messagerie : le laissez-passer vient de l'entrée. Sur ton ordi, sans porte, on peut en poser un à la main
+  // dans localStorage (« dungeoncoop:jeton ») pour essayer avec un Worker lancé en local.
+  messagerie = installerMessagerie({
+    equipe: etat.equipe,
+    moi: etat.moi,
+    jeton: etat.session?.jeton ?? (github.modeDemo ? null : lireStockage('dungeoncoop:jeton')),
+    nomSession: etat.session?.nom ?? null,
+    disponible: github.modeDirect,
+    demo: github.modeDemo,
+    notifier,
+    messagesDemo: github.modeDemo ? await github.messagesDemo() : [],
+    avatarDe: (login) => (github.modeDemo ? null : `https://avatars.githubusercontent.com/${encodeURIComponent(login)}`),
+  });
+  window.__messagerie = messagerie; // pour les tests
+
   await toutRendre();
 
   if (github.modeDirect) {
-    brancher(github.adresseDirect, {
-      surMessage: surMessageDirect,
+    const liaison = brancher(github.adresseDirect, {
+      surMessage: (message) => (message.type === 'maj' ? surMessageDirect(message) : messagerie.recevoir(message)),
+      surOuverture: () => messagerie.connecte(liaison.envoyer),
       surEtat(nouvel, { reconnexion } = {}) {
         etat.direct = nouvel;
         dessinerEtat();
+        if (nouvel === 'hors-ligne') messagerie.deconnecte();
         if (nouvel === 'direct' && reconnexion) toutRendre(); // on a pu rater des messages pendant la coupure
       },
     });
