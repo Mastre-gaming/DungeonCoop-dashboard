@@ -9,6 +9,7 @@
 import { config } from './config.js';
 import * as github from './github.js';
 import { brancher } from './direct.js';
+import { installerTheme } from './theme.js';
 import { el, lienExterne, nomDe, heure, tagDepot } from './outils.js';
 import * as pullRequests from './widgets/pull-requests.js';
 import * as commits from './widgets/commits.js';
@@ -213,6 +214,7 @@ function surMessageDirect(message) {
 // --- Démarrage -------------------------------------------------------------------------------
 
 async function demarrer() {
+  installerTheme();
   if (github.modeDemo) {
     document.getElementById('bandeau-demo').hidden = false;
     document.documentElement.dataset.mode = 'demo';

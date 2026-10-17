@@ -165,6 +165,15 @@ async function principal() {
       console.log(`${nom} : ${score} vérifications · capture ${await onglet.capturer(nom)}`);
     }
 
+    // Le thème choisi s'applique dès l'ouverture, même si l'ordinateur est en clair.
+    await onglet.evaluer("localStorage.setItem('dungeoncoop:theme', 'dark')");
+    await onglet.aller(`${page}/?demo`);
+    await onglet.attendre('document.querySelectorAll(".carte[data-etat]").length === 6');
+    const sombre = await onglet.evaluer("document.documentElement.dataset.theme === 'dark' && getComputedStyle(document.body).backgroundColor === 'rgb(13, 13, 13)'");
+    if (!sombre) echecs.push('thème : le choix « Sombre » gardé ne s’applique pas à l’ouverture');
+    console.log(`thème gardé : ${sombre ? 'ok' : 'raté'} · capture ${await onglet.capturer('theme-sombre-choisi')}`);
+    await onglet.evaluer("localStorage.removeItem('dungeoncoop:theme')");
+
     // 2. Les vraies données, sans vérification de contenu : aucun widget ne doit planter.
     if (option('--vrai')) {
       await onglet.aller(`${page}/?sans-direct`);

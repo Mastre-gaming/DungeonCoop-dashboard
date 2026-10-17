@@ -77,6 +77,19 @@ export async function lancerTests({ simuler }) {
     verifier('Liens : liens.json se lit', false, erreur.message);
   }
 
+  // Le thème : clair, sombre, auto.
+  const fond = () => getComputedStyle(document.body).backgroundColor;
+  const theme = (choix) => $(`[data-theme-choix="${choix}"]`);
+  const stocke = () => { try { return localStorage.getItem('dungeoncoop:theme'); } catch { return 'stockage interdit'; } };
+  theme('dark').click();
+  verifier('Thème : « Sombre » passe la page en sombre', document.documentElement.dataset.theme === 'dark' && fond() === 'rgb(13, 13, 13)', fond());
+  theme('light').click();
+  verifier('Thème : « Clair » passe la page en clair', document.documentElement.dataset.theme === 'light' && fond() === 'rgb(244, 243, 239)', fond());
+  verifier('Thème : le choix est gardé dans le navigateur', stocke() === 'light', stocke());
+  verifier('Thème : le bouton choisi est marqué', theme('light').getAttribute('aria-pressed') === 'true' && theme('auto').getAttribute('aria-pressed') === 'false');
+  theme('auto').click();
+  verifier('Thème : « Auto » revient au réglage de l’ordinateur', !('theme' in document.documentElement.dataset) && stocke() === null, stocke());
+
   // Le direct : un message du Worker ne redessine que les widgets concernés, et s'affiche en notification.
   const rendus = (id) => Number($(`#${id}`).dataset.rendus);
   const avant = { prs: rendus('pull-requests'), commits: rendus('commits'), idees: rendus('idees') };

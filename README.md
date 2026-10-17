@@ -37,6 +37,7 @@ src/config.js              les réglages : repos suivis, adresse du Worker, jalo
 src/github.js              toutes les lectures de données (démo, Worker, ou GitHub direct)
 src/direct.js              la connexion en direct au Worker
 src/main.js                dessine les widgets et tient l'en-tête à jour
+src/theme.js               le réglage clair / auto / sombre, gardé dans le navigateur
 src/widgets/*.js           un widget = un fichier
 src/test.js                les vérifications de ?test
 demo/donnees.js            des données inventées pour ?demo et ?test
