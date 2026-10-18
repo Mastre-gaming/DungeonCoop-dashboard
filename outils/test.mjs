@@ -220,6 +220,17 @@ async function principal() {
       console.log(`${nom} : capture ${await onglet.capturer(nom)}`);
     }
 
+    // Le menu du profil ouvert, connecté à GitHub (démo), sur bureau et sur téléphone : il doit tenir dans l'écran.
+    for (const [nom, vue] of [['profil', {}], ['profil-telephone', { largeur: 390, hauteur: 844 }]]) {
+      await onglet.aller(`${page}/?demo&moi=demo-brams`, vue);
+      await onglet.attendre('document.querySelector("#bouton-profil")');
+      await onglet.evaluer('document.querySelector("#bouton-profil").click(), document.querySelector("[data-action=connexion-github]")?.click(), true');
+      await pause(150);
+      const sort = await onglet.evaluer('(() => { const r = document.querySelector("#menu-profil").getBoundingClientRect(); return r.left < 0 || r.right > window.innerWidth; })()');
+      if (sort) echecs.push(`${nom} : le menu du profil sort de l’écran`);
+      console.log(`${nom} : capture ${await onglet.capturer(nom)}`);
+    }
+
     // 2. Les vraies données, sans vérification de contenu : aucun widget ne doit planter.
     if (option('--vrai')) {
       await onglet.aller(`${page}/?sans-direct`);
@@ -310,9 +321,9 @@ async function principal() {
       await onglet.attendre('document.querySelectorAll(".carte[data-etat]").length === document.querySelectorAll(".grille > .carte").length')
         .catch(() => echecs.push('porte : le dashboard ne s’ouvre pas après le bon mot de passe'));
       const apres = await onglet.evaluer(`({
-        nom: document.querySelector('#nom-session')?.textContent,
-        sessionVisible: !document.querySelector('#session')?.hidden,
-        choixCache: document.querySelector('#choix-moi')?.hidden,
+        nom: document.querySelector('#bouton-profil .nom')?.textContent,
+        sessionVisible: Boolean(document.querySelector('#menu-profil .quitter')),
+        choixCache: !document.querySelector('#menu-profil select#moi'),
         pourToi: document.querySelector('#pour-toi h2')?.textContent ?? '',
         adresse: location.search,
       })`);

@@ -12,8 +12,10 @@ import * as github from './github.js';
 import { brancher } from './direct.js';
 import { installerTheme } from './theme.js';
 import { installerMessagerie } from './messagerie.js';
+import { installerProfil } from './profil.js';
+import { session as sessionGithub } from './connexion.js';
 import { creerSon } from './son.js';
-import { el, lienExterne, nomDe, heure, tagDepot, normaliser } from './outils.js';
+import { el, lienExterne, nomDe, heure, tagDepot, fusionnerProfils, loginDuNom } from './outils.js';
 import * as pullRequests from './widgets/pull-requests.js';
 import * as commits from './widgets/commits.js';
 import * as taches from './widgets/taches.js';
@@ -28,7 +30,9 @@ const CLE_MOI = 'dungeoncoop:moi';
 const parametres = new URLSearchParams(location.search);
 const etat = {
   moi: parametres.get('moi') ?? lireStockage(CLE_MOI) ?? '',
-  equipe: [],
+  equipe: [], // equipe.json avec les pseudos (fusionnerProfils) : ce que lisent les widgets
+  equipeFichier: [], // equipe.json tel quel
+  profils: [], // les pseudos choisis, du Worker direct (GET /profils)
   session: null, // { nom, jeton } quand on est entré avec le mot de passe
   pourToi: new Map(), // id du widget → ce qui attend « moi » dans ce widget
   derniereMaj: null,
@@ -153,34 +157,33 @@ function dessinerPourToi() {
 
 // --- L'en-tête : qui je suis, l'état des données ----------------------------------------------
 
-// Le nom tapé à l'entrée → le pseudo GitHub d'equipe.json (« Paul » → « PCrrfng »), pour reconnaître ses PR et tâches.
-function loginDe(nom) {
-  const membre = etat.equipe.find((m) => normaliser(m.nom) === normaliser(nom) || normaliser(m.github) === normaliser(nom));
-  return membre?.github ?? nom;
+// Qui je suis, c'est un compte GitHub. Il vient, du plus sûr au moins sûr : de ?moi (les tests), de la connexion
+// GitHub, du nom tapé à l'entrée (« Paul » → « PCrrfng » par equipe.json ou par les pseudos), ou de « Je suis ».
+function changerMoi(login) {
+  if (login === etat.moi) return;
+  etat.moi = login;
+  messagerie?.majMoi(etat.moi);
+  etat.pourToi.clear();
+  dessinerPourToi();
+  profil?.dessiner();
+  toutRendre();
 }
 
-function dessinerChoixMoi() {
-  if (etat.session) {
-    // Entré avec le mot de passe : le nom vient de l'entrée. Pour changer, on se déconnecte.
-    document.getElementById('choix-moi').hidden = true;
-    document.getElementById('session').hidden = false;
-    document.getElementById('nom-session').textContent = etat.session.nom;
-    return;
-  }
-  const choix = document.getElementById('moi');
-  const options = [el('option', { value: '' }, '—')];
-  const logins = etat.equipe.map((m) => m.github);
-  if (etat.moi && !logins.includes(etat.moi)) logins.push(etat.moi);
-  for (const login of logins) options.push(el('option', { value: login, selected: login === etat.moi }, nomDe(login, etat.equipe)));
-  choix.replaceChildren(...options);
-  choix.onchange = () => {
-    etat.moi = choix.value;
-    ecrireStockage(CLE_MOI, etat.moi);
-    messagerie?.majMoi(etat.moi);
-    etat.pourToi.clear();
-    dessinerPourToi();
-    toutRendre();
-  };
+function suivreGithub() {
+  const login = sessionGithub.utilisateur?.login;
+  if (login && !parametres.has('moi')) changerMoi(login);
+  profil?.dessiner();
+}
+
+// Les pseudos ont changé (le mien depuis le menu, ou celui d'un autre, prévenu par le Worker) : toute la page suit.
+function appliquerProfils(profils) {
+  if (!Array.isArray(profils) || JSON.stringify(profils) === JSON.stringify(etat.profils)) return;
+  etat.profils = profils;
+  etat.equipe = fusionnerProfils(etat.equipeFichier, profils);
+  messagerie?.majEquipe(etat.equipe);
+  profil?.dessiner();
+  dessinerPourToi();
+  toutRendre();
 }
 
 function dessinerEtat() {
@@ -244,6 +247,7 @@ function surMessageDirect(message) {
 // --- Démarrage -------------------------------------------------------------------------------
 
 let messagerie = null;
+let profil = null;
 
 async function demarrer() {
   installerTheme();
@@ -256,13 +260,26 @@ async function demarrer() {
   document.getElementById('rafraichir').addEventListener('click', () => toutRendre({ force: true }));
 
   try {
-    etat.equipe = await github.local('equipe.json');
+    etat.equipeFichier = await github.local('equipe.json');
   } catch (erreur) {
     console.error('equipe.json :', erreur);
   }
-  etat.session = await github.session();
-  if (etat.session && !parametres.has('moi')) etat.moi = loginDe(etat.session.nom);
-  dessinerChoixMoi();
+  [etat.session, etat.profils] = await Promise.all([github.session(), github.profils()]);
+  etat.equipe = fusionnerProfils(etat.equipeFichier, etat.profils);
+  if (etat.session && !parametres.has('moi')) etat.moi = loginDuNom(etat.session.nom, etat.equipe) ?? etat.session.nom;
+
+  // Le profil, en haut à droite. La connexion GitHub, d'où qu'elle vienne (le menu ou le tableau), dit qui je suis.
+  profil = installerProfil({
+    lire: () => ({ moi: etat.moi, equipe: etat.equipe, entree: etat.session }),
+    choisirMoi(login) {
+      ecrireStockage(CLE_MOI, login);
+      changerMoi(login);
+    },
+    apresConnexion: () => rendre('travail'),
+    apresPseudo: appliquerProfils,
+  });
+  profil.dessiner();
+  document.addEventListener('dungeoncoop:github', suivreGithub);
   dessinerPourToi();
   dessinerEtat();
 
@@ -286,13 +303,20 @@ async function demarrer() {
 
   if (github.modeDirect) {
     const liaison = brancher(github.adresseDirect, {
-      surMessage: (message) => (message.type === 'maj' ? surMessageDirect(message) : messagerie.recevoir(message)),
+      surMessage(message) {
+        if (message.type === 'maj') surMessageDirect(message);
+        else if (message.type === 'profils') appliquerProfils(message.profils);
+        else messagerie.recevoir(message);
+      },
       surOuverture: () => messagerie.connecte(liaison.envoyer),
       surEtat(nouvel, { reconnexion } = {}) {
         etat.direct = nouvel;
         dessinerEtat();
         if (nouvel === 'hors-ligne') messagerie.deconnecte();
-        if (nouvel === 'direct' && reconnexion) toutRendre(); // on a pu rater des messages pendant la coupure
+        if (nouvel === 'direct' && reconnexion) {
+          toutRendre(); // on a pu rater des messages pendant la coupure
+          github.profils().then(appliquerProfils);
+        }
       },
     });
     // Les webhooks ne disent rien des votes 👍 : un tour complet toutes les 3 minutes les rattrape.
@@ -307,6 +331,7 @@ async function demarrer() {
 
   // Pour les tests : simuler un message du Worker sans Worker.
   window.__simulerDirect = surMessageDirect;
+  window.__appliquerProfils = appliquerProfils;
 
   if (github.modeTest) {
     const { lancerTests } = await import('./test.js');

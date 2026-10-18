@@ -5,6 +5,7 @@
 //                   et pour la messagerie (avec le laissez-passer de l'entrée, vérifié avec MOT_DE_PASSE)
 //   GET  /api/…     lit l'API GitHub avec le token (5 000 appels/h) et un cache partagé par toutes les pages
 //   GET  /auth/…    la connexion GitHub du tableau de travail (connexion.js)
+//   GET  /profils   les pseudos des devs ; PUT /profil pour changer le sien (profils.js), lus aussi par le camp
 //   GET  /          l'état du Worker : token et secret présents, nombre de pages connectées
 //
 // Tout l'état vit dans un seul Durable Object (« la salle ») : le cache, et la liste des pages connectées.
@@ -15,9 +16,16 @@ import { connexion, connexionPrete } from './connexion.js';
 import { depotsDe, regle, regles } from './chemins.js';
 import { traduire } from './evenements.js';
 import { Messagerie } from './messagerie.js';
+import { changerProfil } from './profils.js';
 import { signatureValide } from './signature.js';
 
-const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET', 'Access-Control-Max-Age': '86400' };
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, PUT',
+  'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+  'Access-Control-Max-Age': '86400',
+};
+const EQUIPE_MS = 60_000; // equipe.json relu au plus une fois par minute
 
 const texte = (corps, status = 200) => new Response(corps, { status, headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8' } });
 
@@ -47,6 +55,24 @@ export default {
     }
 
     if (url.pathname.startsWith('/auth/') && requete.method === 'GET') return connexion(requete, env);
+
+    if (url.pathname === '/profils' && requete.method === 'GET') {
+      return Response.json(await salle.profils(), { headers: { ...CORS, 'Cache-Control': 'no-store' } });
+    }
+
+    if (url.pathname === '/profil' && requete.method === 'PUT') {
+      const token = (requete.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '').trim();
+      const corps = await requete.text();
+      if (corps.length > 1000) return texte('Trop long.', 413);
+      let donnees;
+      try {
+        donnees = JSON.parse(corps || '{}');
+      } catch {
+        return texte('Le corps n’est pas du JSON.', 400);
+      }
+      const { status, erreur, profil, profils } = await salle.changerProfil(token, donnees);
+      return Response.json(erreur ? { erreur } : { profil, profils }, { status, headers: { ...CORS, 'Cache-Control': 'no-store' } });
+    }
 
     if (url.pathname === '/' && requete.method === 'GET') {
       return Response.json(await salle.sante(), { headers: { ...CORS, 'Cache-Control': 'no-store' } });
@@ -100,6 +126,10 @@ export class Salle extends DurableObject {
         derniers: (n) => sql.exec('SELECT id, auteur, texte, t FROM messages ORDER BY id DESC LIMIT ?', n).toArray().reverse(),
       },
     });
+
+    // Les pseudos des devs, un par compte GitHub (profils.js).
+    sql.exec('CREATE TABLE IF NOT EXISTS profils (github TEXT PRIMARY KEY COLLATE NOCASE, nom TEXT NOT NULL, t INTEGER NOT NULL)');
+    this.equipe = null; // { liste, t } : equipe.json, relu au plus une fois par minute
   }
 
   async fetch() {
@@ -146,6 +176,7 @@ export class Salle extends DurableObject {
       secret: Boolean(this.env.WEBHOOK_SECRET),
       messagerie: Boolean(this.env.MOT_DE_PASSE),
       messages: this.ctx.storage.sql.exec('SELECT COUNT(*) AS n FROM messages').one().n,
+      profils: this.ctx.storage.sql.exec('SELECT COUNT(*) AS n FROM profils').one().n,
       connexion: connexionPrete(this.env),
       pagesConnectees: this.ctx.getWebSockets().length,
       depots: depotsDe(this.env),
@@ -170,6 +201,54 @@ export class Salle extends DurableObject {
         } catch {}
       }
     }
+  }
+
+  profils() {
+    return this.ctx.storage.sql.exec('SELECT github, nom, t FROM profils ORDER BY github').toArray();
+  }
+
+  async changerProfil(token, corps) {
+    const sql = this.ctx.storage.sql;
+    const resultat = await changerProfil({
+      token,
+      corps,
+      equipe: await this.#equipe(),
+      profils: this.profils(),
+      quiEst: (t) => this.#quiEst(t),
+      enregistrer: ({ github, nom, t }) => sql.exec('INSERT INTO profils (github, nom, t) VALUES (?, ?, ?) ON CONFLICT(github) DO UPDATE SET github = excluded.github, nom = excluded.nom, t = excluded.t', github, nom, t),
+      effacer: (github) => sql.exec('DELETE FROM profils WHERE github = ?', github),
+    });
+    if (resultat.erreur) return resultat;
+    // Toutes les pages ouvertes (le dashboard et le camp) l'apprennent tout de suite.
+    const profils = this.profils();
+    const envoi = JSON.stringify({ type: 'profils', profils });
+    for (const page of this.ctx.getWebSockets()) {
+      try {
+        page.send(envoi);
+      } catch {}
+    }
+    return { ...resultat, profils };
+  }
+
+  // Le login GitHub à qui appartient ce token, ou null s'il est refusé.
+  async #quiEst(token) {
+    const reponse = await fetch('https://api.github.com/user', {
+      headers: { 'User-Agent': 'dungeoncoop-direct', Accept: 'application/vnd.github+json', Authorization: `Bearer ${token}` },
+    });
+    if (reponse.status === 401 || reponse.status === 403) return null;
+    if (!reponse.ok) throw new Error(`GitHub a répondu ${reponse.status}`);
+    return (await reponse.json()).login ?? null;
+  }
+
+  // equipe.json (EQUIPE dans wrangler.jsonc) : qui fait partie de l'équipe. null si on n'a jamais pu le lire.
+  async #equipe() {
+    if (this.equipe && Date.now() - this.equipe.t < EQUIPE_MS) return this.equipe.liste;
+    try {
+      const reponse = await fetch(this.env.EQUIPE, { headers: { 'User-Agent': 'dungeoncoop-direct' } });
+      const liste = reponse.ok ? await reponse.json() : null;
+      if (Array.isArray(liste)) this.equipe = { liste, t: Date.now() };
+    } catch {}
+    return this.equipe?.liste ?? null;
   }
 
   webSocketClose(page, code, raison) {

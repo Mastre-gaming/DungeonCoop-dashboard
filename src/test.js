@@ -4,7 +4,7 @@
 
 const pause = (ms) => new Promise((ok) => setTimeout(ok, ms));
 
-export async function lancerTests({ simuler }) {
+export async function lancerTests({ simuler, etat }) {
   const resultats = [];
   const verifier = (nom, ok, detail = '') => resultats.push({ nom, ok: Boolean(ok), detail: ok ? '' : String(detail) });
   const $ = (s) => document.querySelector(s);
@@ -18,6 +18,16 @@ export async function lancerTests({ simuler }) {
   verifier('Camp : le bouton mène au jeu en ligne, dans un nouvel onglet', jouer?.href.startsWith('https://dungeoncoop.0xbaba-eth.workers.dev') && jouer.target === '_blank' && jouer.textContent.includes('Aller au camp'), jouer?.outerHTML);
   const icone = jouer?.querySelector('.icone-feu');
   verifier('Camp : l’icône du feu s’affiche (32 x 32, pixels nets)', icone && icone.offsetWidth === 32 && icone.offsetHeight === 32 && getComputedStyle(icone).backgroundImage.includes('bouton_camp.png'), icone?.outerHTML);
+
+  // Le profil, en haut à droite (moi = demo-brams, pas encore connecté à GitHub, pas de porte).
+  const boutonProfil = $('#bouton-profil');
+  verifier('Profil : en haut à droite, mon icône et mon nom', boutonProfil?.querySelector('.avatar')?.textContent === 'BR' && boutonProfil.querySelector('.nom')?.textContent === 'Brams', boutonProfil?.textContent);
+  boutonProfil?.click();
+  verifier('Profil : le bouton ouvre le menu', !$('#menu-profil').hidden && boutonProfil.getAttribute('aria-expanded') === 'true');
+  verifier('Profil : sans GitHub, le pseudo ne se change pas, et le menu dit pourquoi', $('#champ-pseudo')?.disabled && texte('#menu-profil .aide').includes('Connecte-toi avec GitHub') && $('#menu-profil [data-action="connexion-github"]'), texte('#menu-profil'));
+  verifier('Profil : sans porte ni GitHub, « Je suis » est dans le menu', $('#menu-profil select#moi')?.value === 'demo-brams');
+  document.body.click();
+  verifier('Profil : un clic ailleurs ferme le menu', $('#menu-profil').hidden && boutonProfil.getAttribute('aria-expanded') === 'false');
 
   const enErreur = $$('.carte[data-etat="erreur"]').map((c) => `${c.id} : ${c.textContent}`);
   verifier('aucun widget en erreur', !enErreur.length, enErreur.join(' | '));
@@ -240,6 +250,41 @@ export async function lancerTests({ simuler }) {
   }
   verifier('Travail : « + Carte » crée une issue dans l’axe de la colonne', await attendre(() => cartes('axe: histoire').includes(39)), cartes('axe: histoire'));
   verifier('Travail : un titre tapé reste du texte', !$('#travail i') && texte('#travail').includes('<i>camp</i>'));
+
+  // Le pseudo (connecté à GitHub par le tableau de travail, plus haut).
+  const ouvrirProfil = () => $('#menu-profil').hidden && $('#bouton-profil').click();
+  const changerPseudo = (nom) => {
+    ouvrirProfil();
+    const champPseudo = $('#champ-pseudo');
+    champPseudo.value = nom;
+    champPseudo.form.requestSubmit();
+  };
+  ouvrirProfil();
+  verifier('Profil : connecté à GitHub par le tableau, le menu le sait', texte('#menu-profil .profil-github').includes('@demo-brams') && !$('#champ-pseudo').disabled && $('#champ-pseudo').value === 'Brams', texte('#menu-profil'));
+  verifier('Profil : connecté, « Je suis » disparaît (GitHub dit qui je suis)', !$('#menu-profil select#moi') && !texte('#menu-profil').includes('null'), texte('#menu-profil'));
+  changerPseudo('áyla');
+  verifier('Profil : le nom d’un autre membre est refusé (accents et majuscules compris)', await attendre(() => texte('#menu-profil .resultat.erreur').includes('déjà le nom')), texte('#menu-profil'));
+  changerPseudo('Brammo le Grand');
+  verifier('Profil : le nouveau pseudo s’affiche en haut', await attendre(() => texte('#bouton-profil .nom') === 'Brammo le Grand'), texte('#bouton-profil'));
+  verifier('Profil : …dans « Pour toi »', texte('#pour-toi h2') === 'Pour toi, Brammo le Grand', texte('#pour-toi h2'));
+  verifier('Profil : …dans les widgets', await attendre(() => texte('#taches .colonne[data-personne="demo-brams"]').includes('Brammo le Grand')), texte('#taches .colonne[data-personne="demo-brams"]'));
+  const miens = () => $$('#messagerie .msg.mien .qui strong').map((s) => s.textContent);
+  verifier('Profil : …et sur mes anciens messages, signés « Brams »', miens().length > 0 && miens().every((n) => n === 'Brammo le Grand'), miens());
+  window.__messagerie.recevoir({ type: 'message', message: { id: 110, auteur: 'Ayla', texte: '@Brams tu relis ?', t: Date.now() } });
+  verifier('Profil : mon ancien nom me mentionne toujours', $('#messagerie .msg[data-id="110"] .mention.moi'));
+  window.__appliquerProfils([...etat.profils, { github: 'demo-ayla', nom: 'Aylou', t: 1 }]);
+  const auteurs = () => $$('#messagerie .msg .qui strong').map((s) => s.textContent);
+  verifier('Profil : le pseudo d’un autre, prévenu par le Worker, change le nom de ses messages', auteurs().includes('Aylou') && !auteurs().includes('Ayla'), auteurs());
+  changerPseudo('');
+  verifier('Profil : un pseudo vide rend le nom d’equipe.json', await attendre(() => texte('#bouton-profil .nom') === 'Brams'), texte('#bouton-profil'));
+  ouvrirProfil();
+  $('#menu-profil [data-action="deconnexion-github"]')?.click();
+  verifier('Profil : se déconnecter de GitHub depuis le menu ; le menu reste ouvert, le tableau suit', await attendre(() => $('#travail [data-action="connexion"]')) && !$('#menu-profil').hidden && $('#champ-pseudo')?.disabled && $('#menu-profil select#moi'));
+  $('#menu-profil [data-action="connexion-github"]')?.click();
+  verifier('Profil : se connecter depuis le menu (démo) ; le menu reste ouvert, le pseudo se change', !$('#menu-profil').hidden && !$('#champ-pseudo')?.disabled && texte('#menu-profil .profil-github').includes('@demo-brams'), texte('#menu-profil'));
+  $('#menu-profil').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  verifier('Profil : Échap ferme le menu', $('#menu-profil').hidden);
+  window.__appliquerProfils([]);
 
   const reussies = resultats.filter((r) => r.ok).length;
   window.__resultats = resultats;

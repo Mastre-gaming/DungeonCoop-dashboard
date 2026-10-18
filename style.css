@@ -100,10 +100,71 @@ h1, h2, h3 { margin: 0; line-height: 1.2; }
 .de .aretes { fill: none; stroke: #fff; stroke-width: 1.4; stroke-linejoin: round; opacity: 0.9; }
 
 .commandes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.moi { display: inline-flex; align-items: center; gap: 8px; color: var(--texte-2); font-size: 0.9rem; }
-.moi[hidden], .session[hidden] { display: none; }
-.session { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; }
-.session a { margin-left: 4px; font-size: 0.85rem; }
+
+/* Le profil du dev, en haut à droite : son icône et son pseudo ; le menu s'ouvre dessous. */
+.profil { position: relative; }
+.profil-bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 10px 3px 3px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--texte);
+  background: var(--surface);
+  border: 1px solid var(--bord);
+  border-radius: 999px;
+  cursor: pointer;
+  max-width: 220px;
+}
+.profil-bouton:hover { background: var(--surface-2); }
+.profil-bouton[aria-expanded="true"] { border-color: var(--accent); }
+.profil-bouton .avatar { width: 26px; height: 26px; }
+.profil-bouton .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profil-bouton .fleche { color: var(--muet); font-size: 0.75rem; }
+.profil-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 12;
+  width: min(320px, calc(100vw - 32px));
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--bord);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+}
+.profil-menu[hidden] { display: none; }
+.profil-menu h3 { margin: 0 0 6px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muet); }
+.profil-menu .ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 0.88rem; }
+.profil-tete { display: flex; align-items: center; gap: 12px; }
+.profil-tete .avatar { width: 40px; height: 40px; }
+.profil-tete strong { display: block; font-size: 1.05rem; overflow-wrap: anywhere; }
+.profil-tete .muet { font-size: 0.82rem; }
+.profil-pseudo label { display: block; margin-bottom: 6px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muet); }
+.profil-pseudo .ligne { flex-wrap: nowrap; }
+.profil-pseudo input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--texte);
+  background: var(--page);
+  border: 1px solid var(--bord);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.profil-pseudo input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.profil-pseudo input:disabled, .profil-pseudo .bouton:disabled { opacity: 0.55; cursor: not-allowed; }
+.profil-pseudo .aide { margin: 6px 0 0; font-size: 0.8rem; color: var(--texte-2); }
+.profil-pseudo .resultat { margin: 8px 0 0; padding: 4px 10px; font-size: 0.82rem; border-left: 3px solid var(--bon); }
+.profil-pseudo .resultat.erreur { border-left-color: var(--grave); }
+.profil-github { padding-top: 12px; border-top: 1px solid var(--trait); }
+.profil-moi { display: flex; align-items: center; gap: 8px; color: var(--texte-2); font-size: 0.9rem; padding-top: 12px; border-top: 1px solid var(--trait); }
+.profil-menu .quitter { justify-self: start; font-size: 0.82rem; color: var(--texte-2); }
 select {
   font: inherit;
   color: var(--texte);
@@ -680,6 +741,7 @@ body { padding-bottom: 72px; } /* la bulle ne cache jamais le bas de la page */
   .carte { padding: 14px; }
   .colonnes { grid-auto-columns: minmax(78vw, 1fr); }
   .bulle-messages .libelle { display: none; }
+  .profil-bouton { max-width: 160px; }
   .messagerie { left: 8px; right: 8px; width: auto; bottom: 68px; height: calc(100vh - 84px); }
 }
 
