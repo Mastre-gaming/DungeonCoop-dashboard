@@ -112,6 +112,7 @@ async function ouvrirOnglet(dt) {
   await envoyer('Page.enable');
   await envoyer('Runtime.enable');
   await envoyer('Log.enable');
+  await envoyer('Emulation.setFocusEmulationEnabled', { enabled: true }); // la page se croit au premier plan, comme devant l'écran
 
   const evaluer = async (expression) => (await envoyer('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })).result.value;
 
