@@ -30,6 +30,9 @@ export const config = {
   prefixePriorite: 'priorité:', // priorité: haute / moyenne / basse
 
   // Le tableau de travail : une colonne par axe. Une tâche est rangée par son label « axe: … ».
+  // Les axes sont décrits dans le repo du jeu, content/axes.json (le contrat avec le camp) : le tableau le lit.
+  // La liste ci-dessous ne sert que si ce fichier ne se lit pas (et en ?demo / ?test, qui n'utilisent pas le réseau).
+  axesDuJeu: 'https://raw.githubusercontent.com/Mastre-gaming/DungeonCoop/main/content/axes.json',
   // Pour ajouter un axe : une ligne ici, et le même label dans le repo du jeu (Issues → Labels).
   prefixeAxe: 'axe:',
   axes: [

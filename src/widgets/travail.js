@@ -41,7 +41,22 @@ function changerVue(nouvelle, ctx) {
 
 const estTache = (issue) => !issue.pull_request && (!estIdee(issue) || issue.assignees?.length);
 const etatDe = (issue) => (issue.state === 'closed' ? 'fait' : issue.assignees?.length ? 'encours' : 'afaire');
-const axeDe = (issue) => config.axes.find((a) => aLeLabel(issue, a.label))?.label ?? '';
+// Les axes : ceux de content/axes.json (le repo du jeu, le contrat avec le camp), sinon ceux de config.js.
+// « anciens » : d'autres labels rangés dans le même axe.
+let AXES = config.axes;
+let axesLus = false;
+async function chargerAxes() {
+  if (axesLus || modeDemo || !config.axesDuJeu) return;
+  axesLus = true;
+  try {
+    const r = await fetch(config.axesDuJeu, { cache: 'no-cache' });
+    const contrat = r.ok ? await r.json() : null;
+    const liste = (contrat?.axes ?? []).filter((a) => a?.label && a?.nom).map((a) => ({ label: a.label, nom: a.nom, anciens: a.anciens ?? [] }));
+    if (liste.length) AXES = liste;
+  } catch {} // le fichier ne se lit pas : on garde config.js
+}
+const labelsDe = (a) => [a.label, ...(a.anciens ?? [])];
+const axeDe = (issue) => AXES.find((a) => labelsDe(a).some((l) => aLeLabel(issue, l)))?.label ?? '';
 const logins = (issue) => (issue.assignees ?? []).map((a) => a.login);
 const estAMoi = (issue, moi) => Boolean(moi) && logins(issue).some((l) => normaliser(l) === normaliser(moi));
 
@@ -68,6 +83,7 @@ function fusionner(issues) {
 }
 
 export async function afficher(ctx) {
+  await chargerAxes();
   const [lues, disponible, moi] = await Promise.all([
     api(`/repos/${depotJeu}/issues?state=all&per_page=100`, { force: ctx.force }),
     connexionDisponible(),
@@ -122,7 +138,7 @@ function barre(ctx, moi, disponible) {
 // --- Les colonnes ---------------------------------------------------------------------------------
 
 function colonnesParAxe(taches) {
-  return [...config.axes.map((a) => ({ id: a.label, nom: a.nom })), { id: '', nom: 'Sans axe' }].map((axe) => {
+  return [...AXES.map((a) => ({ id: a.label, nom: a.nom })), { id: '', nom: 'Sans axe' }].map((axe) => {
     const toutes = taches.filter((t) => axeDe(t) === axe.id);
     const ouvertes = toutes.filter((t) => t.state !== 'closed').sort(trier);
     return { type: 'axe', ...axe, cartes: ouvertes, faites: toutes.length - ouvertes.length, total: toutes.length };
@@ -178,7 +194,7 @@ function carte(issue, outils) {
   const { ctx, moi } = outils;
   const jalon = jalonDe(issue);
   const priorite = prioriteDe(issue);
-  const axe = config.axes.find((a) => a.label === axeDe(issue));
+  const axe = AXES.find((a) => a.label === axeDe(issue));
   const etat = etatDe(issue);
   const meta = el('div', { class: 'meta' },
     `#${issue.number}`,
@@ -208,7 +224,7 @@ function carte(issue, outils) {
   const choixAxe = el('select', {
     class: 'choix-axe', 'aria-label': `Axe de #${issue.number}`, dataset: { action: 'axe' },
     onchange: (e) => modifier(outils, issue, { labels: labelsAvecAxe(issue, e.target.value) }, `rangée dans « ${nomAxe(e.target.value)} »`),
-  }, el('option', { value: '', selected: !axe }, 'Sans axe'), config.axes.map((a) => el('option', { value: a.label, selected: a === axe }, a.nom)));
+  }, el('option', { value: '', selected: !axe }, 'Sans axe'), AXES.map((a) => el('option', { value: a.label, selected: a === axe }, a.nom)));
 
   li.append(el('div', { class: 'actions-carte' },
     ouverte && !estAMoi(issue, moi) ? action('prendre', 'Je prends', () => ({ assignees: [...logins(issue), moi] }), 'prise') : null,
@@ -218,10 +234,10 @@ function carte(issue, outils) {
   return li;
 }
 
-const nomAxe = (label) => config.axes.find((a) => a.label === label)?.nom ?? 'Sans axe';
+const nomAxe = (label) => AXES.find((a) => a.label === label)?.nom ?? 'Sans axe';
 
 function labelsAvecAxe(issue, label) {
-  const autres = (issue.labels ?? []).map((l) => l.name ?? l).filter((n) => !config.axes.some((a) => normaliser(a.label) === normaliser(n)));
+  const autres = (issue.labels ?? []).map((l) => l.name ?? l).filter((n) => !AXES.some((a) => labelsDe(a).some((l) => normaliser(l) === normaliser(n))));
   return label ? [...autres, label] : autres;
 }
 
