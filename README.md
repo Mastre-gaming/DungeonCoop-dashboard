@@ -7,6 +7,7 @@ Une seule page web pour toute l'équipe de [DungeonCoop](https://github.com/Mast
 | Partie | Ce qu'on y voit |
 |---|---|
 | L'entrée | le mot de passe de l'équipe et ton nom de dev, une fois tous les 30 jours sur chaque navigateur |
+| Ton profil | en haut à droite : ton icône (l'avatar GitHub) et ton pseudo. Le menu montre ta connexion GitHub et ton pseudo, que tu changes une fois connecté. Le nouveau pseudo s'affiche partout, pour toute l'équipe, même sur tes anciens messages |
 | Aller au camp | le bouton du camp, en haut (une icône en pixels LPC, le feu qui crépite) : ouvre le jeu en ligne (le camp) dans un nouvel onglet, pour héberger ou rejoindre. L'adresse est dans `src/config.js` (`jeuEnLigne`) |
 | Pour toi | les PR qui attendent ta relecture, les conflits et tests rouges sur tes PR, tes tâches |
 | PR et conflits | une carte par PR ouverte (jeu et dashboard) : tests, conflit, relecture, depuis combien de jours elle attend |
@@ -28,7 +29,8 @@ GitHub ──webhook──▶ Worker « direct » ──WebSocket──▶ les p
    └──────────── lecture de l'API (5 000/h) ◀──────────────┘
 ```
 
-- **Une porte devant la page.** Un petit Worker (`porte/`) passe devant chaque fichier : sans le mot de passe de l'équipe, on ne voit que l'écran d'entrée. Le mot de passe n'est jamais dans le repo (il est public) : c'est le secret Cloudflare `MOT_DE_PASSE`. Après l'entrée, le navigateur garde un laissez-passer signé 30 jours ; changer le mot de passe déconnecte tout le monde. Le nom tapé à l'entrée remplace « Je suis » : « Paul » est reconnu comme `PCrrfng` grâce à `equipe.json`.
+- **Une porte devant la page.** Un petit Worker (`porte/`) passe devant chaque fichier : sans le mot de passe de l'équipe, on ne voit que l'écran d'entrée. Le mot de passe n'est jamais dans le repo (il est public) : c'est le secret Cloudflare `MOT_DE_PASSE`. Après l'entrée, le navigateur garde un laissez-passer signé 30 jours ; changer le mot de passe déconnecte tout le monde. Le nom tapé à l'entrée remplace « Je suis » : « Paul » est reconnu comme `PCrrfng` grâce à `equipe.json` (ou à son pseudo).
+- **Qui tu es, c'est ton compte GitHub ; ton pseudo n'est qu'un nom affiché.** Les pseudos vivent dans le Worker direct (`GET /profils`, une petite table SQLite) et remplacent le nom d'`equipe.json`, dans le dashboard et dans le camp. Pour changer le tien (`PUT /profil`), il faut être connecté avec GitHub : le Worker montre ton token à GitHub pour savoir qui tu es (sans le garder), vérifie que tu es dans `equipe.json` (variable `EQUIPE`), et refuse le nom ou le compte d'un autre membre. Toutes les pages ouvertes l'apprennent tout de suite.
 - **La messagerie** passe par le Worker direct, sur la même connexion que le direct. La page présente le laissez-passer de l'entrée ; le Worker le vérifie avec le même secret `MOT_DE_PASSE` et signe chaque message du nom tapé à l'entrée (une page ne peut pas écrire au nom d'un autre). Les 1 000 derniers messages sont gardés dans la base du Worker ; les 100 derniers s'affichent. Pour les longues discussions, il y a Discord.
 - **Les données restent dans GitHub.** La page les lit et les rassemble, elle n'en garde aucune. Pour agir (poster une idée, fusionner), les boutons ouvrent GitHub. Seul le tableau de travail écrit, une fois connecté : dans les issues du jeu, avec le compte GitHub de la personne.
 - **En direct :** GitHub prévient le Worker à chaque événement (push, PR, relecture, issue, tests…). Le Worker vide son cache pour ce sujet et prévient les pages ouvertes, qui redessinent seulement les widgets concernés et affichent une notification.
@@ -51,12 +53,14 @@ src/main.js                dessine les widgets et tient l'en-tête à jour
 src/theme.js               le réglage clair / auto / sombre, gardé dans le navigateur
 src/messagerie.js          la bulle 💬 et le panneau des messages
 src/son.js                 le petit son des nouveaux messages, fabriqué par le navigateur (pas de fichier)
+src/profil.js              ton profil en haut à droite : icône, pseudo, connexion GitHub
 src/widgets/*.js           un widget = un fichier
 src/test.js                les vérifications de ?test
 demo/donnees.js            des données inventées pour ?demo et ?test
 worker/                    le Worker « direct » (son propre package.json)
 worker/src/session.js      le laissez-passer, vérifié par la porte et par le Worker direct
 worker/src/messagerie.js   la messagerie, sans rien de Cloudflare (testée avec Node)
+worker/src/profils.js      les pseudos : qui peut changer quoi (testé avec Node)
 outils/serveur.mjs         un serveur pour ouvrir la page sur ton ordi
 outils/test.mjs            le test sans écran (Chrome ou Edge), avec captures
 outils/annonce.mjs         poster un message dans la messagerie depuis un terminal (Claude y signale les conflits)
@@ -125,7 +129,7 @@ C'est fait depuis le 18 octobre 2026, avec la GitHub App « DungeonCoop Dashboar
 4. `npm run deploy` dans `worker/`. Vérifier : `https://dungeoncoop-direct.mastredev.workers.dev/` dit `"connexion": true`.
 5. **Les labels des axes** existent dans le repo du jeu (`axe: combats`, `axe: histoire`…, la liste est dans `src/config.js`).
 
-**Comment ça marche :** « Se connecter avec GitHub » passe par le Worker (`/auth/connexion`, puis `/auth/retour`), qui échange le code contre un token et le rend à la page dans le fragment de l'adresse (`#jeton=…`, qui ne passe par aucun serveur). Le Worker ne garde rien. La page garde le token dans ce navigateur et écrit directement dans `api.github.com`. Le token ne peut toucher qu'aux issues de DungeonCoop (la permission de la GitHub App), et seulement si la personne a l'écriture sur le repo du jeu. `PAGES` (dans `worker/wrangler.jsonc`) liste les pages vers lesquelles un token peut repartir.
+**Comment ça marche :** « Se connecter avec GitHub » passe par le Worker (`/auth/connexion`, puis `/auth/retour`), qui échange le code contre un token et le rend à la page dans le fragment de l'adresse (`#jeton=…`, qui ne passe par aucun serveur). Le Worker ne garde rien. La page garde le token dans ce navigateur et écrit directement dans `api.github.com` ; elle ne l'envoie au Worker que pour changer le pseudo. Le token ne peut toucher qu'aux issues de DungeonCoop (la permission de la GitHub App), et seulement si la personne a l'écriture sur le repo du jeu. `PAGES` (dans `worker/wrangler.jsonc`) liste les pages vers lesquelles un token peut repartir.
 
 **Sur ton ordi :** une deuxième GitHub App avec le callback `http://localhost:8787/auth/retour`, son Client ID dans `worker/.dev.vars` (`GITHUB_CLIENT_ID=…`) avec `GITHUB_CLIENT_SECRET=…`, puis la page sur `http://localhost:8000/?direct=http://localhost:8787`. En `?demo`, « Se connecter (démo) » marche sans rien de tout ça et modifie les données inventées.
 

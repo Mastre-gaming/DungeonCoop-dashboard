@@ -6,7 +6,7 @@
 // couper), et le titre de l'onglet compte les non-lus : « (3) DungeonCoop · Tableau de bord ».
 
 import { urlGithub } from './config.js';
-import { el, lienExterne, avatar, temps, normaliser, nomDe } from './outils.js';
+import { el, lienExterne, avatar, temps, normaliser, nomDe, loginDuNom } from './outils.js';
 
 const CLE_VU = 'dungeoncoop:messages-vus';
 const CLE_OUVERT = 'dungeoncoop:messagerie-ouverte';
@@ -88,8 +88,16 @@ export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible
   }
 
   // --- Qui est qui -------------------------------------------------------------------------
-  const loginDe = (nom) => equipe.find((m) => normaliser(m.nom) === normaliser(nom) || normaliser(m.github) === normaliser(nom))?.github ?? null;
+  // Un message est signé du nom tapé à l'entrée. On affiche le pseudo actuel de la personne, même sur ses vieux
+  // messages : « Paul » devient « Mastre » partout dès qu'il change de pseudo (equipe : voir fusionnerProfils).
+  const loginDe = (nom) => loginDuNom(nom, equipe);
+  const nomAffiche = (nom) => {
+    const login = loginDe(nom);
+    return login ? nomDe(login, equipe) : nom;
+  };
   function estMoi(nom) {
+    const login = loginDe(nom);
+    if (login && etat.moi && normaliser(login) === normaliser(etat.moi)) return true;
     const moiMemes = [etat.nom, etat.moi, nomDe(etat.moi, equipe)].filter(Boolean).map(normaliser);
     return moiMemes.includes(normaliser(nom));
   }
@@ -120,7 +128,7 @@ export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible
     return el('li', { class: classes.join(' '), dataset: { id: message.id } },
       avatar(qui, 24),
       el('div', { class: 'corps' },
-        el('div', { class: 'qui' }, el('strong', {}, message.auteur), ' ', temps(message.t)),
+        el('div', { class: 'qui' }, el('strong', { title: nomAffiche(message.auteur) !== message.auteur ? `Signé « ${message.auteur} » à l’entrée` : null }, nomAffiche(message.auteur)), ' ', temps(message.t)),
         el('p', {}, formater(message.texte))));
   }
 
@@ -173,7 +181,7 @@ export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible
 
   function dessinerStatut() {
     const ouverte = etat.statut === 'ouverte';
-    statut.textContent = demo ? 'démo' : ouverte ? `● ${etat.nom}` : '';
+    statut.textContent = demo ? 'démo' : ouverte ? `● ${nomAffiche(etat.nom)}` : '';
     statut.className = `statut${ouverte ? ' en-direct' : ''}`;
     info.textContent = etat.statut === 'refusee' ? etat.raison : INFOS[etat.statut] ?? '';
     info.hidden = ouverte;
@@ -249,7 +257,7 @@ export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible
         const { auteur, texte } = message.message;
         if (nouveau && !estMoi(auteur) && !regarde()) {
           sonner();
-          if (mentionneMoi(texte)) notifier([{ texte: `${auteur} te mentionne : « ${texte.length > 80 ? `${texte.slice(0, 79)}…` : texte} »` }]);
+          if (mentionneMoi(texte)) notifier([{ texte: `${nomAffiche(auteur)} te mentionne : « ${texte.length > 80 ? `${texte.slice(0, 79)}…` : texte} »` }]);
         }
       } else if (message.type === 'refuse') {
         etat.statut = 'refusee';
@@ -270,6 +278,13 @@ export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible
       etat.moi = nouveauMoi;
       if (demo) etat.nom = nomDe(nouveauMoi, equipe);
       dessinerFil();
+      dessinerNonLus();
+    },
+    // Les pseudos ont changé : les noms du fil suivent.
+    majEquipe(nouvelle) {
+      equipe = nouvelle;
+      dessinerFil();
+      dessinerStatut();
       dessinerNonLus();
     },
     sons: () => etat.sons, // pour les tests

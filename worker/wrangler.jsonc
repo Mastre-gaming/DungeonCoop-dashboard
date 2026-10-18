@@ -14,6 +14,8 @@
   "vars": {
     // Les repos suivis : seuls leurs webhooks sont acceptés, et seuls leurs chemins sont lus avec le token.
     "DEPOTS": "Mastre-gaming/DungeonCoop,Mastre-gaming/DungeonCoop-dashboard",
+    // L'équipe : seuls les comptes GitHub de ce fichier peuvent se choisir un pseudo (PUT /profil).
+    "EQUIPE": "https://raw.githubusercontent.com/Mastre-gaming/DungeonCoop-dashboard/main/equipe.json",
     // La connexion GitHub du tableau de travail : le « Client ID » de l'OAuth App (public). Vide = pas de connexion.
     "GITHUB_CLIENT_ID": "Iv23liFD4VAEDRGpNxxv",
     // Les pages vers lesquelles un token peut repartir après la connexion. * = les aperçus de branche.

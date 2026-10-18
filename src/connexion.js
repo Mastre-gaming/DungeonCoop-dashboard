@@ -1,7 +1,8 @@
 // La connexion GitHub, pour modifier les issues depuis le tableau de travail.
 // Le Worker (worker/src/connexion.js) fait l'aller-retour avec GitHub et rend le token dans l'adresse
 // (#jeton=…). On le garde dans ce navigateur et on écrit dans GitHub directement : c'est GitHub qui dit
-// qui a le droit (les membres qui ont l'écriture sur le repo du jeu). Le token ne part que vers api.github.com.
+// qui a le droit (les membres qui ont l'écriture sur le repo du jeu). Le token part vers api.github.com, et vers
+// le Worker quand on change son pseudo : il le montre à GitHub pour savoir qui on est, sans le garder.
 //
 // En démo (?demo, ?test), « se connecter » ne quitte pas la page et les écritures changent les données inventées.
 
@@ -50,10 +51,14 @@ export function connexionDisponible() {
   return disponibilite;
 }
 
+// Qui est connecté a changé (connexion, déconnexion, token expiré) : le profil de l'en-tête et main.js écoutent.
+const prevenir = () => document.dispatchEvent(new Event('dungeoncoop:github'));
+
 export function seConnecter(loginDemo) {
   if (modeDemo) {
     session.jeton = 'demo';
     session.utilisateur = { login: loginDemo || 'demo-brams', avatar_url: null };
+    prevenir();
     return;
   }
   const retour = location.origin + location.pathname + location.search;
@@ -64,23 +69,29 @@ export function seDeconnecter() {
   session.jeton = null;
   session.utilisateur = null;
   if (!modeDemo) ecrire(null);
+  prevenir();
 }
 
-// Qui est connecté. Un token refusé (révoqué sur GitHub) est oublié.
-export async function utilisateur() {
-  if (!session.jeton) return null;
-  if (session.utilisateur) return session.utilisateur;
-  try {
-    session.utilisateur = await appel('GET', '/user');
-  } catch (erreur) {
-    if (erreur.status === 401) {
+// Qui est connecté. Un token refusé (révoqué sur GitHub) est oublié. Le profil et le tableau le demandent
+// en même temps au chargement : une seule question part vers GitHub.
+let enCours = null;
+export function utilisateur() {
+  if (!session.jeton) return Promise.resolve(null);
+  if (session.utilisateur) return Promise.resolve(session.utilisateur);
+  enCours ??= appel('GET', '/user')
+    .then((qui) => {
+      session.utilisateur = qui;
+      prevenir();
+      return qui;
+    })
+    .catch((erreur) => {
+      if (erreur.status !== 401) throw erreur;
       seDeconnecter();
       session.erreur = 'La connexion GitHub a expiré : reconnecte-toi.';
       return null;
-    }
-    throw erreur;
-  }
-  return session.utilisateur;
+    })
+    .finally(() => (enCours = null));
+  return enCours;
 }
 
 // Une écriture dans l'API GitHub, avec le token. Renvoie la réponse de GitHub (l'issue à jour).

@@ -81,10 +81,29 @@ export function avatar(utilisateur, taille = 24) {
   return el('span', { class: 'avatar initiales', style: `--taille:${taille}px`, 'aria-hidden': 'true' }, initiales);
 }
 
-// Le nom affiché : celui d'equipe.json s'il est rempli, sinon le pseudo GitHub.
+// Le nom affiché : le pseudo choisi, sinon celui d'equipe.json s'il est rempli, sinon le compte GitHub.
+// (L'équipe que lisent les widgets a déjà les pseudos : voir fusionnerProfils.)
 export function nomDe(login, equipe = []) {
   const membre = equipe.find((m) => normaliser(m.github) === normaliser(login));
   return membre?.nom || login;
+}
+
+// equipe.json + les pseudos du Worker (GET /profils) : le pseudo prend la place du nom, et l'ancien nom
+// reste connu (autresNoms) pour reconnaître la personne dans les vieux messages ou à l'entrée.
+export function fusionnerProfils(equipe = [], profils = []) {
+  return equipe.map((membre) => {
+    const profil = profils.find((p) => normaliser(p.github) === normaliser(membre.github));
+    if (!profil?.nom) return membre;
+    return { ...membre, nom: profil.nom, nomEquipe: membre.nom, autresNoms: [membre.nom].filter(Boolean) };
+  });
+}
+
+// Le compte GitHub de quelqu'un, d'après un nom : son pseudo, son nom d'equipe.json ou son compte. null si inconnu.
+export function loginDuNom(nom, equipe = []) {
+  const n = normaliser(nom);
+  if (!n) return null;
+  const membre = equipe.find((m) => [m.github, m.nom, ...(m.autresNoms ?? [])].some((x) => x && normaliser(x) === n));
+  return membre?.github ?? null;
 }
 
 // Une pastille d'état : toujours une icône et un texte, jamais la couleur seule.

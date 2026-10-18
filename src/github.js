@@ -148,6 +148,36 @@ export async function session() {
   }
 }
 
+// --- Les pseudos des devs (worker/src/profils.js) ------------------------------------------
+
+// [{ github, nom }] : le pseudo que chacun s'est choisi. [] sans Worker, ou s'il ne répond pas.
+export async function profils() {
+  if (modeDemo) return structuredClone((await donneesDemo()).profils ?? []);
+  if (!modeDirect) return [];
+  try {
+    const reponse = await fetch(`${adresseDirect}/profils`, { cache: 'no-store' });
+    return reponse.ok ? reponse.json() : [];
+  } catch {
+    return [];
+  }
+}
+
+// Changer son pseudo (vide : revenir au nom d'equipe.json). Le token GitHub prouve au Worker qui on est.
+// Renvoie la liste des pseudos à jour ; une erreur porte le message du Worker. En démo, loginDemo tient lieu de token.
+export async function changerPseudo(nom, jeton, loginDemo) {
+  if (modeDemo) return changerPseudoDemo(nom, loginDemo);
+  if (!modeDirect) throw new Error('Les pseudos vivent dans le Worker direct, qui n’est pas branché ici.');
+  const reponse = await fetch(`${adresseDirect}/profil`, {
+    method: 'PUT',
+    cache: 'no-store',
+    headers: { Authorization: `Bearer ${jeton}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nom }),
+  });
+  const donnees = await reponse.json().catch(() => ({}));
+  if (!reponse.ok) throw erreurHttp(donnees.erreur ?? `Le Worker a répondu ${reponse.status}.`, reponse.status);
+  return donnees.profils;
+}
+
 // --- Fichiers ------------------------------------------------------------------------------
 
 // Un fichier texte du repo du jeu (GAME_SPEC.md).
@@ -197,6 +227,21 @@ function donneesDemo() {
 
 export async function messagesDemo() {
   return structuredClone((await donneesDemo()).messages ?? []);
+}
+
+// La même règle que le Worker (worker/src/profils.js) : on ne prend ni le nom, ni le pseudo, ni le compte d'un autre.
+async function changerPseudoDemo(nom, login) {
+  const donnees = await donneesDemo();
+  donnees.profils ??= [];
+  const n = (t) => String(t ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+  const propre = String(nom ?? '').trim().replace(/\s+/g, ' ');
+  const autres = (g) => n(g) !== n(login);
+  const pris = donnees.local['equipe.json'].some((m) => autres(m.github) && [m.github, m.nom].some((x) => n(x) === n(propre)))
+    || donnees.profils.some((p) => autres(p.github) && n(p.nom) === n(propre));
+  if (propre && pris) throw erreurHttp(`« ${propre} » est déjà le nom de quelqu’un d’autre dans l’équipe.`, 409);
+  donnees.profils = donnees.profils.filter((p) => autres(p.github));
+  if (propre) donnees.profils.push({ github: login, nom: propre, t: Date.now() });
+  return structuredClone(donnees.profils);
 }
 
 async function depuisDemo(chemin) {
