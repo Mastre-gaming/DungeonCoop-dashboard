@@ -34,10 +34,12 @@ export const config = {
   prefixeAxe: 'axe:',
   axes: [
     { label: 'axe: combats', nom: 'Combats' },
+    { label: 'axe: classes', nom: 'Classes et personnages' },
     { label: 'axe: histoire', nom: 'Chapitres et histoire' },
     { label: 'axe: pixel art', nom: 'Pixel art' },
     { label: 'axe: salles', nom: 'Salles et carte' },
     { label: 'axe: menus', nom: 'Menus et écrans' },
+    { label: 'axe: son', nom: 'Son et musique' },
     { label: 'axe: technique', nom: 'Technique' },
   ],
   // La colonne « Fait » montre ce qui a été fermé ces derniers jours ; les axes comptent tout.
