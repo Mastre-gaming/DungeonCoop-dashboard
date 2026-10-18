@@ -16,5 +16,12 @@
     // Sprite Painter (/sprite-painter/) : le demo.html de BABA, essayé dans l'ordre. D'abord sa branche,
     // puis main pour le jour où elle sera fusionnée.
     "SPRITE_PAINTER": "https://raw.githubusercontent.com/Mastre-gaming/DungeonCoop/tools/lpc-sprite-mods/tools/lpc-sprite-mods/demo.html,https://raw.githubusercontent.com/Mastre-gaming/DungeonCoop/main/tools/lpc-sprite-mods/demo.html"
+  },
+  // Les aperçus de PR (Workers Builds lance « wrangler preview », qui exige ses propres variables) : les liens de
+  // Sprite Painter sont publics, ce sont les mêmes. (Sans le secret MOT_DE_PASSE, la porte d'un aperçu reste fermée.)
+  "previews": {
+    "vars": {
+      "SPRITE_PAINTER": "https://raw.githubusercontent.com/Mastre-gaming/DungeonCoop/tools/lpc-sprite-mods/tools/lpc-sprite-mods/demo.html,https://raw.githubusercontent.com/Mastre-gaming/DungeonCoop/main/tools/lpc-sprite-mods/demo.html"
+    }
   }
 }
