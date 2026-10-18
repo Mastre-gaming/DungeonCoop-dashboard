@@ -244,6 +244,31 @@ function surMessageDirect(message) {
   }, 300);
 }
 
+// --- Le laissez-passer, passé au camp -------------------------------------------------------
+// Le camp (le jeu) parle à la même messagerie, par le même Worker direct : il lui faut le laissez-passer de l'entrée.
+// Il passe dans le fragment de l'adresse (#jeton=…), qui ne va à aucun serveur ; le camp le range et l'efface aussitôt.
+// Le camp sur un autre ordi (le lien local d'un dev, un aperçu de PR) vient le chercher : #camp=<son adresse>, et on
+// l'y renvoie avec le laissez-passer, seulement vers le jeu en ligne, ses aperçus, ou localhost.
+function campAutorise(adresse) {
+  try {
+    const u = new URL(adresse), jeu = new URL(config.jeuEnLigne);
+    if (u.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(u.hostname)) return true;
+    return u.protocol === 'https:' && (u.host === jeu.host || u.host.endsWith(`-${jeu.host}`));
+  } catch {
+    return false;
+  }
+}
+function passerAuCamp(jeton) {
+  if (!jeton) return;
+  const fragment = `#jeton=${encodeURIComponent(jeton)}`;
+  document.getElementById('jouer').href = config.jeuEnLigne + fragment;
+  const retour = /(?:^#|&)camp=([^&]+)/.exec(location.hash);
+  if (!retour) return;
+  const adresse = decodeURIComponent(retour[1]);
+  history.replaceState(null, '', location.pathname + location.search);
+  if (campAutorise(adresse)) location.replace(adresse.split('#')[0] + fragment);
+}
+
 // --- Démarrage -------------------------------------------------------------------------------
 
 let messagerie = null;
@@ -267,6 +292,7 @@ async function demarrer() {
   [etat.session, etat.profils] = await Promise.all([github.session(), github.profils()]);
   etat.equipe = fusionnerProfils(etat.equipeFichier, etat.profils);
   if (etat.session && !parametres.has('moi')) etat.moi = loginDuNom(etat.session.nom, etat.equipe) ?? etat.session.nom;
+  passerAuCamp(etat.session?.jeton);
 
   // Le profil, en haut à droite. La connexion GitHub, d'où qu'elle vienne (le menu ou le tableau), dit qui je suis.
   profil = installerProfil({
