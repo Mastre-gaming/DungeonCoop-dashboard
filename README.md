@@ -7,6 +7,7 @@ Une seule page web pour toute l'équipe de [DungeonCoop](https://github.com/Mast
 | Partie | Ce qu'on y voit |
 |---|---|
 | L'entrée | le mot de passe de l'équipe et ton nom de dev, une fois tous les 30 jours sur chaque navigateur |
+| Jouer au camp | le bouton au feu de camp, en haut : ouvre le jeu en ligne (le camp) dans un nouvel onglet, pour héberger ou rejoindre. L'adresse est dans `src/config.js` (`jeuEnLigne`) |
 | Pour toi | les PR qui attendent ta relecture, les conflits et tests rouges sur tes PR, tes tâches |
 | PR et conflits | une carte par PR ouverte (jeu et dashboard) : tests, conflit, relecture, depuis combien de jours elle attend |
 | Derniers push | qui a poussé quoi, sur quelle branche, il y a combien de temps |

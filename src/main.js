@@ -246,6 +246,7 @@ let messagerie = null;
 
 async function demarrer() {
   installerTheme();
+  document.getElementById('jouer').href = config.jeuEnLigne;   // l'adresse du jeu vient de config.js
   if (github.modeDemo) {
     document.getElementById('bandeau-demo').hidden = false;
     document.documentElement.dataset.mode = 'demo';
