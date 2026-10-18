@@ -102,6 +102,7 @@ export async function lancerTests({ simuler }) {
   const panneau = $('#messagerie');
   verifier('Messagerie : la bulle est là, le panneau fermé', bulle && panneau?.hidden);
   verifier('Messagerie : les 3 messages des autres sont non lus', texte('#bulle-messages .non-lus') === '3', texte('#bulle-messages .non-lus'));
+  verifier('Onglet : le titre compte les non-lus, même onglet affiché', /^\(3\) DungeonCoop/.test(document.title), document.title);
   bulle.click();
   verifier('Messagerie : la bulle ouvre le panneau', !panneau.hidden && bulle.getAttribute('aria-expanded') === 'true');
   verifier('Messagerie : l’historique', $$('#messagerie .msg').length === 3, $$('#messagerie .msg').length);
@@ -124,6 +125,44 @@ export async function lancerTests({ simuler }) {
   verifier('Messagerie : une mention fait une notification', texte('#notifs').includes('Ayla te mentionne'), texte('#notifs'));
   window.__messagerie.recevoir({ type: 'message', message: { id: 99, auteur: 'Ayla', texte: '@brams tu relis ?', t: Date.now() } });
   verifier('Messagerie : un même message reçu deux fois ne compte qu’une fois', texte('#bulle-messages .non-lus') === '1' && $$('#messagerie .msg').length === 5);
+
+  // Le son des messages (en test, il est compté sans être joué) et le titre de l'onglet.
+  const sons = () => window.__messagerie.sons();
+  const recevoir = (id, auteur, texteMessage) => window.__messagerie.recevoir({ type: 'message', message: { id, auteur, texte: texteMessage, t: Date.now() } });
+  verifier('Son : un message des autres, panneau fermé, sonne une fois (ni l’historique, ni mon message, ni le doublon)', sons() === 1, sons());
+  verifier('Onglet : un nouveau message passe le titre à (1)', /^\(1\) DungeonCoop/.test(document.title), document.title);
+  recevoir(100, 'Brams', 'Je regarde');
+  verifier('Son : mon propre message, venu du Worker, ne sonne pas (et écrire, c’est avoir lu)', sons() === 1 && $('#bulle-messages .non-lus').hidden && document.title.startsWith('DungeonCoop'), `${sons()} · ${document.title}`);
+  const boutonSon = $('#messagerie .son');
+  verifier('Son : le bouton 🔔 est dans le panneau, son actif au départ', boutonSon?.textContent === '🔔' && boutonSon.getAttribute('aria-pressed') === 'true', boutonSon?.outerHTML);
+  boutonSon?.click();
+  verifier('Son : 🔔 le coupe', boutonSon?.textContent === '🔕' && boutonSon.getAttribute('aria-pressed') === 'false', boutonSon?.outerHTML);
+  recevoir(101, 'Cerise', 'Le boss est prêt');
+  verifier('Son : coupé, un message ne sonne pas mais compte', sons() === 1 && /^\(1\) DungeonCoop/.test(document.title), `${sons()} · ${document.title}`);
+  boutonSon?.click();
+  verifier('Son : le remettre le fait entendre une fois', boutonSon?.textContent === '🔔' && sons() === 2, sons());
+  bulle.click();
+  verifier('Onglet : tout lu, le titre redevient normal', document.title.startsWith('DungeonCoop'), document.title);
+  recevoir(102, 'Dorn', 'Vu, merci');
+  verifier('Son : pendant qu’on lit la messagerie, rien ne sonne et tout est lu', sons() === 2 && $('#bulle-messages .non-lus').hidden && document.title.startsWith('DungeonCoop'), `${sons()} · ${document.title}`);
+  $('#messagerie .fermer').click();
+  try {
+    // Le son lui-même, mesuré hors ligne : audible sans être fort, et court.
+    const { programmerDing } = await import('./son.js');
+    const frequence = 44100;
+    const horsLigne = new OfflineAudioContext(1, frequence * 0.6, frequence);
+    programmerDing(horsLigne, 0);
+    const echantillons = (await horsLigne.startRendering()).getChannelData(0);
+    let crete = 0;
+    let fin = 0;
+    echantillons.forEach((v, i) => {
+      crete = Math.max(crete, Math.abs(v));
+      if (Math.abs(v) > 0.001) fin = i;
+    });
+    verifier('Son : un ding doux (crête entre 0,05 et 0,4) et court (fini avant 0,45 s)', crete > 0.05 && crete < 0.4 && fin / frequence < 0.45, `crête ${crete.toFixed(3)}, fin à ${(fin / frequence).toFixed(2)} s`);
+  } catch (erreur) {
+    verifier('Son : le ding se fabrique hors ligne', false, erreur.message);
+  }
 
   // Le direct : un message du Worker ne redessine que les widgets concernés, et s'affiche en notification.
   const rendus = (id) => Number($(`#${id}`).dataset.rendus);

@@ -16,7 +16,7 @@ Une seule page web pour toute l'équipe de [DungeonCoop](https://github.com/Mast
 | Avancée du projet | les jalons de `GAME_SPEC.md`, de D1 à M4, avec la part d'issues fermées |
 | Liens utiles | le repo, les docs, Sprite Painter, le lanceur… (`liens.json`) |
 | Sprite Painter | l'éditeur de persos de BABA, en ligne sur `/sprite-painter/` (derrière le mot de passe) |
-| Messages | la bulle 💬 en bas à gauche : des messages courts à l'équipe, en direct ; `#12` mène à l'issue ou la PR, `@nom` prévient la personne |
+| Messages | la bulle 💬 en bas à gauche : des messages courts à l'équipe, en direct ; `#12` mène à l'issue ou la PR, `@nom` prévient la personne. Un petit son quand un message des autres arrive et qu'on ne lit pas la messagerie (🔔 dans le panneau pour le couper ; le navigateur attend un premier clic sur la page). Le titre de l'onglet compte les non-lus : « (3) DungeonCoop · … » |
 | Thème | clair, auto ou sombre, en haut à droite |
 | Idées | les issues « Idée » rangées par jalon, puis par priorité et par votes 👍 |
 
@@ -50,6 +50,7 @@ src/connexion.js           la connexion GitHub du tableau de travail, et ses éc
 src/main.js                dessine les widgets et tient l'en-tête à jour
 src/theme.js               le réglage clair / auto / sombre, gardé dans le navigateur
 src/messagerie.js          la bulle 💬 et le panneau des messages
+src/son.js                 le petit son des nouveaux messages, fabriqué par le navigateur (pas de fichier)
 src/widgets/*.js           un widget = un fichier
 src/test.js                les vérifications de ?test
 demo/donnees.js            des données inventées pour ?demo et ?test

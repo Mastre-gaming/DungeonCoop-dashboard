@@ -2,12 +2,15 @@
 // Les messages passent par le Worker direct, sur la même connexion que le direct. On y entre avec le
 // laissez-passer de l'écran d'entrée : le Worker le vérifie, et c'est lui qui signe chaque message du nom
 // de son auteur. Dans le texte, #12 devient un lien vers l'issue ou la PR, et @nom prévient la personne.
+// Un message des autres qu'on n'est pas en train de lire fait un petit son (🔔 dans le panneau pour le
+// couper), et le titre de l'onglet compte les non-lus : « (3) DungeonCoop · Tableau de bord ».
 
 import { urlGithub } from './config.js';
 import { el, lienExterne, avatar, temps, normaliser, nomDe } from './outils.js';
 
 const CLE_VU = 'dungeoncoop:messages-vus';
 const CLE_OUVERT = 'dungeoncoop:messagerie-ouverte';
+const CLE_SON = 'dungeoncoop:son-messages';
 const MOTIF = /(https?:\/\/[^\s<>"]*[^\s<>".,;:!?)])|#(\d+)\b|@([\p{L}\p{N}_-]+)/gu;
 
 const INFOS = {
@@ -17,7 +20,7 @@ const INFOS = {
   coupee: 'Connexion perdue, je me reconnecte…',
 };
 
-export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible, demo, notifier, messagesDemo = [], avatarDe = () => null }) {
+export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible, demo, notifier, jouerSon = () => {}, messagesDemo = [], avatarDe = () => null }) {
   const persistant = !demo; // en démo et en test, rien n'est gardé d'une ouverture à l'autre
   const etat = {
     messages: new Map(),
@@ -29,6 +32,8 @@ export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible
     envoyer: () => false,
     enAttente: new Map(), // ref → texte envoyé, en attendant la réponse du Worker
     compteur: 0,
+    sonCoupe: persistant && lire(CLE_SON) === 'coupe',
+    sons: 0, // les sons demandés depuis l'ouverture de la page (les tests les comptent)
   };
   const titreDeBase = document.title;
 
@@ -43,8 +48,9 @@ export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible
   const zone = el('textarea', { rows: '2', maxlength: '500', 'aria-label': 'Ton message', placeholder: 'Écris à l’équipe… #12 pour une PR, @nom pour prévenir' });
   const envoi = el('button', { type: 'submit', class: 'bouton' }, 'Envoyer');
   const formulaire = el('form', { class: 'ecrire' }, zone, envoi);
+  const boutonSon = el('button', { type: 'button', class: 'son', 'aria-label': 'Son des nouveaux messages', onclick: () => couperSon(!etat.sonCoupe) });
   const panneau = el('section', { class: 'messagerie', id: 'messagerie', 'aria-label': 'Les messages de l’équipe', hidden: true },
-    el('header', {}, el('h2', {}, 'Messages'), statut,
+    el('header', {}, el('h2', {}, 'Messages'), statut, boutonSon,
       el('button', { type: 'button', class: 'fermer', 'aria-label': 'Fermer les messages', onclick: () => ouvrir(false) }, '✕')),
     fil, info, erreur, formulaire);
   document.body.append(bulle, panneau);
@@ -61,10 +67,14 @@ export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible
     e.preventDefault();
     envoyer(zone.value);
   });
+  // On lit la messagerie quand son panneau est ouvert, dans l'onglet affiché, dans la fenêtre au premier plan.
+  // Sinon, un message des autres reste non lu et fait un son.
+  const regarde = () => !panneau.hidden && !document.hidden && document.hasFocus();
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && !panneau.hidden) marquerVus();
+    if (regarde()) marquerVus();
     dessinerNonLus();
   });
+  window.addEventListener('focus', () => regarde() && marquerVus());
 
   function ouvrir(oui) {
     panneau.hidden = !oui;
@@ -130,7 +140,26 @@ export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible
     compteurNonLus.hidden = n === 0;
     compteurNonLus.textContent = n > 99 ? '99+' : String(n);
     bulle.setAttribute('aria-label', n ? `Messages : ${n} non lu${n > 1 ? 's' : ''}` : 'Messages');
-    document.title = n && document.hidden ? `(${n}) ${titreDeBase}` : titreDeBase;
+    document.title = n ? `(${n > 99 ? '99+' : n}) ${titreDeBase}` : titreDeBase;
+  }
+
+  function dessinerSon() {
+    boutonSon.textContent = etat.sonCoupe ? '🔕' : '🔔';
+    boutonSon.setAttribute('aria-pressed', String(!etat.sonCoupe));
+    boutonSon.title = etat.sonCoupe ? 'Son coupé : clique pour le remettre' : 'Un son quand un message arrive : clique pour le couper';
+  }
+
+  function couperSon(oui) {
+    etat.sonCoupe = oui;
+    if (persistant) ecrire(CLE_SON, oui ? 'coupe' : 'actif');
+    dessinerSon();
+    if (!oui) sonner(); // on entend tout de suite le son qu'on remet
+  }
+
+  function sonner() {
+    if (etat.sonCoupe) return;
+    etat.sons++;
+    jouerSon();
   }
 
   function marquerVus() {
@@ -158,7 +187,7 @@ export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible
       etat.vu = message.id; // ses propres messages sont lus
       if (persistant) ecrire(CLE_VU, String(message.id));
     }
-    if (!panneau.hidden && !document.hidden) marquerVus();
+    if (regarde()) marquerVus();
   }
 
   // --- Envoyer -----------------------------------------------------------------------------
@@ -192,6 +221,7 @@ export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible
   dessinerFil();
   dessinerStatut();
   dessinerNonLus();
+  dessinerSon();
   if (persistant && lire(CLE_OUVERT) === '1') ouvrir(true);
 
   // --- Ce que main.js appelle ----------------------------------------------------------------
@@ -217,8 +247,9 @@ export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible
         const nouveau = !etat.messages.has(message.message.id);
         ajouter(message.message);
         const { auteur, texte } = message.message;
-        if (nouveau && !estMoi(auteur) && mentionneMoi(texte) && (panneau.hidden || document.hidden)) {
-          notifier([{ texte: `${auteur} te mentionne : « ${texte.length > 80 ? `${texte.slice(0, 79)}…` : texte} »` }]);
+        if (nouveau && !estMoi(auteur) && !regarde()) {
+          sonner();
+          if (mentionneMoi(texte)) notifier([{ texte: `${auteur} te mentionne : « ${texte.length > 80 ? `${texte.slice(0, 79)}…` : texte} »` }]);
         }
       } else if (message.type === 'refuse') {
         etat.statut = 'refusee';
@@ -241,6 +272,7 @@ export function installerMessagerie({ equipe, moi, jeton, nomSession, disponible
       dessinerFil();
       dessinerNonLus();
     },
+    sons: () => etat.sons, // pour les tests
   };
 }
 

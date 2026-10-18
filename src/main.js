@@ -12,6 +12,7 @@ import * as github from './github.js';
 import { brancher } from './direct.js';
 import { installerTheme } from './theme.js';
 import { installerMessagerie } from './messagerie.js';
+import { creerSon } from './son.js';
 import { el, lienExterne, nomDe, heure, tagDepot, normaliser } from './outils.js';
 import * as pullRequests from './widgets/pull-requests.js';
 import * as commits from './widgets/commits.js';
@@ -275,6 +276,7 @@ async function demarrer() {
     disponible: github.modeDirect,
     demo: github.modeDemo,
     notifier,
+    jouerSon: github.modeTest ? () => {} : creerSon(), // en test, les sons sont comptés, pas joués
     messagesDemo: github.modeDemo ? await github.messagesDemo() : [],
     avatarDe: (login) => (github.modeDemo ? null : `https://avatars.githubusercontent.com/${encodeURIComponent(login)}`),
   });

@@ -591,8 +591,10 @@ a.notif:hover { text-decoration: none; background: var(--surface-2); }
 .messagerie h2 { font-size: 1rem; }
 .messagerie .statut { font-size: 0.8rem; color: var(--muet); }
 .messagerie .statut.en-direct { color: var(--texte-2); }
-.messagerie .fermer { margin-left: auto; font: inherit; color: var(--texte-2); background: none; border: 0; border-radius: 6px; padding: 2px 8px; cursor: pointer; }
-.messagerie .fermer:hover { background: var(--surface-2); color: var(--texte); }
+.messagerie .son, .messagerie .fermer { font: inherit; color: var(--texte-2); background: none; border: 0; border-radius: 6px; padding: 2px 8px; cursor: pointer; }
+.messagerie .son { margin-left: auto; }
+.messagerie .son[aria-pressed="false"] { opacity: 0.6; }
+.messagerie .son:hover, .messagerie .fermer:hover { background: var(--surface-2); color: var(--texte); opacity: 1; }
 .fil-messages { flex: 1; overflow-y: auto; list-style: none; margin: 0; padding: 12px 14px; display: grid; align-content: start; gap: 10px; }
 .msg { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; }
 .msg .corps { min-width: 0; padding: 6px 10px; border-radius: 10px; background: var(--surface-2); }
