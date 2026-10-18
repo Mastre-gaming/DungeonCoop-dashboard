@@ -15,7 +15,7 @@ import { installerMessagerie } from './messagerie.js';
 import { installerProfil } from './profil.js';
 import { session as sessionGithub } from './connexion.js';
 import { creerSon } from './son.js';
-import { el, lienExterne, nomDe, heure, tagDepot, fusionnerProfils, loginDuNom } from './outils.js';
+import { el, lienExterne, nomDe, heure, tagDepot, fusionnerProfils, loginDuNom, poserJetonCamp, versCamp } from './outils.js';
 import * as pullRequests from './widgets/pull-requests.js';
 import * as commits from './widgets/commits.js';
 import * as taches from './widgets/taches.js';
@@ -260,8 +260,9 @@ function campAutorise(adresse) {
 }
 function passerAuCamp(jeton) {
   if (!jeton) return;
+  poserJetonCamp(jeton);   // aussi pour « Le jeu en ligne » du widget des liens
   const fragment = `#jeton=${encodeURIComponent(jeton)}`;
-  document.getElementById('jouer').href = config.jeuEnLigne + fragment;
+  document.getElementById('jouer').href = versCamp(config.jeuEnLigne);
   const retour = /(?:^#|&)camp=([^&]+)/.exec(location.hash);
   if (!retour) return;
   const adresse = decodeURIComponent(retour[1]);

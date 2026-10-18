@@ -4,7 +4,7 @@
 
 import { config } from '../config.js';
 import { local } from '../github.js';
-import { el, lienExterne, vide } from '../outils.js';
+import { el, lienExterne, versCamp, vide } from '../outils.js';
 
 export const sujets = [];
 
@@ -17,7 +17,7 @@ export async function afficher() {
   return el('div', {},
     el('ul', { class: 'grille-liens' }, liens.map((lien) => el('li', {},
       lien.url
-        ? lienExterne(lien.url, { class: 'lien', dataset: { nom: lien.nom } }, contenu(lien))
+        ? lienExterne(versCamp(lien.url), { class: 'lien', dataset: { nom: lien.nom } }, contenu(lien))
         : lienExterne(EDITER, { class: 'lien a-remplir', title: 'Ce lien est vide : clique pour le remplir dans liens.json' }, contenu(lien, 'à ajouter'))))),
     el('p', { class: 'pied' }, lienExterne(EDITER, {}, 'Modifier les liens'), el('span', { class: 'muet' }, ' (liens.json, depuis le site de GitHub)')));
 }
