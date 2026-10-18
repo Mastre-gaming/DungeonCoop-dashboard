@@ -19,7 +19,8 @@
     // La connexion GitHub du tableau de travail : le « Client ID » de l'OAuth App (public). Vide = pas de connexion.
     "GITHUB_CLIENT_ID": "Iv23liFD4VAEDRGpNxxv",
     // Les pages vers lesquelles un token peut repartir après la connexion. * = les aperçus de branche.
-    "PAGES": "https://dungeoncoop-dashboard.mastredev.workers.dev,https://*-dungeoncoop-dashboard.mastredev.workers.dev,http://localhost:8000"
+    // Le camp aussi (le jeu en ligne, ses aperçus de PR, et en local : preview 4173, dev 5173, et 5174 sur le PC de Paul).
+    "PAGES": "https://dungeoncoop-dashboard.mastredev.workers.dev,https://*-dungeoncoop-dashboard.mastredev.workers.dev,http://localhost:8000,https://dungeoncoop.0xbaba-eth.workers.dev,https://*-dungeoncoop.0xbaba-eth.workers.dev,http://localhost:4173,http://localhost:5173,http://localhost:5174"
   },
   "observability": { "enabled": true }
 }
