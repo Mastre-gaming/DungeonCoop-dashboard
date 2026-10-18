@@ -264,8 +264,10 @@ export async function lancerTests({ simuler, etat }) {
   verifier('Profil : connecté, « Je suis » disparaît (GitHub dit qui je suis)', !$('#menu-profil select#moi') && !texte('#menu-profil').includes('null'), texte('#menu-profil'));
   changerPseudo('áyla');
   verifier('Profil : le nom d’un autre membre est refusé (accents et majuscules compris)', await attendre(() => texte('#menu-profil .resultat.erreur').includes('déjà le nom')), texte('#menu-profil'));
+  verifier('Profil : après un refus, ce que j’ai tapé reste dans le champ', $('#champ-pseudo')?.value === 'áyla' && texte('#bouton-profil .nom') === 'Brams', $('#champ-pseudo')?.value);
   changerPseudo('Brammo le Grand');
   verifier('Profil : le nouveau pseudo s’affiche en haut', await attendre(() => texte('#bouton-profil .nom') === 'Brammo le Grand'), texte('#bouton-profil'));
+  verifier('Profil : le menu dit que c’est fait', await attendre(() => texte('#menu-profil .resultat.ok').includes('C’est fait')) && !$('#menu-profil').hidden, texte('#menu-profil'));
   verifier('Profil : …dans « Pour toi »', texte('#pour-toi h2') === 'Pour toi, Brammo le Grand', texte('#pour-toi h2'));
   verifier('Profil : …dans les widgets', await attendre(() => texte('#taches .colonne[data-personne="demo-brams"]').includes('Brammo le Grand')), texte('#taches .colonne[data-personne="demo-brams"]'));
   const miens = () => $$('#messagerie .msg.mien .qui strong').map((s) => s.textContent);
@@ -284,6 +286,13 @@ export async function lancerTests({ simuler, etat }) {
   verifier('Profil : se connecter depuis le menu (démo) ; le menu reste ouvert, le pseudo se change', !$('#menu-profil').hidden && !$('#champ-pseudo')?.disabled && texte('#menu-profil .profil-github').includes('@demo-brams'), texte('#menu-profil'));
   $('#menu-profil').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   verifier('Profil : Échap ferme le menu', $('#menu-profil').hidden);
+  // Un Worker pas encore redéployé (GET /profils en 404) : le menu le dit, au lieu de laisser taper pour rien.
+  const { pseudos } = await import('./github.js');
+  Object.assign(pseudos, { disponibles: false, raison: 'Le Worker en ligne ne connaît pas encore les pseudos : il faut le redéployer (npm run deploy dans worker/).' });
+  ouvrirProfil();
+  verifier('Profil : un Worker sans pseudos, le champ est fermé et le menu dit pourquoi', $('#champ-pseudo')?.disabled && texte('#menu-profil .aide').includes('redéployer'), texte('#menu-profil .aide'));
+  Object.assign(pseudos, { disponibles: true, raison: null });
+  $('#menu-profil').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   window.__appliquerProfils([]);
 
   const reussies = resultats.filter((r) => r.ok).length;
