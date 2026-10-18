@@ -10,6 +10,9 @@
     // Le thème choisi (clair ou sombre) s'applique avant le premier affichage, sans flash. Sans choix : auto.
     try { const t = localStorage.getItem('dungeoncoop:theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch {}
   </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@600&display=swap">
   <link rel="stylesheet" href="style.css">
   <script type="module" src="src/main.js"></script>
 </head>
@@ -26,7 +29,7 @@
       </div>
     </div>
     <div class="commandes">
-      <a id="jouer" class="bouton jouer" href="https://dungeoncoop.0xbaba-eth.workers.dev" target="_blank" rel="noopener" title="Ouvrir le camp (nouvel onglet)"><svg class="icone-camp" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges"><path d="M7 1h1v1h1v2h1v1h1v3h-1v1H6V8H5V5h1V3h1z" fill="#f08a24"/><path d="M7 5h1v1h1v2H6V6h1z" fill="#ffd64a"/><path d="M2 11h3v1h2v1h2v-1h2v-1h3v2h-2v1h-3v1H7v-1H4v-1H2z" fill="#7a4a24"/><path d="M3 10h2v1H3zM11 10h2v1h-2z" fill="#a8693a"/></svg><span>Jouer au camp</span></a>
+      <a id="jouer" class="bouton-camp" href="https://dungeoncoop.0xbaba-eth.workers.dev" target="_blank" rel="noopener" title="Aller au camp (nouvel onglet)"><span class="icone-feu" aria-hidden="true"></span><span class="libelle">Aller au camp</span></a>
       <label class="moi" id="choix-moi">Je suis <select id="moi"><option value="">—</option></select></label>
       <span id="session" class="session" hidden><span class="muet">Connecté :</span> <strong id="nom-session"></strong> <a href="/deconnexion">Se déconnecter</a></span>
       <span id="etat" class="etat github" title=""><span class="point" aria-hidden="true"></span><span>Chargement…</span></span>

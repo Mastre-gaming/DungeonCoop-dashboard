@@ -13,9 +13,11 @@ export async function lancerTests({ simuler }) {
   const numeros = (s) => $$(s).map((n) => Number(n.dataset.numero));
   const egal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
-  // Le bouton « Jouer au camp » de l'en-tête
+  // Le bouton « Aller au camp » de l'en-tête
   const jouer = $('#jouer');
-  verifier('Jouer : le bouton mène au jeu en ligne, dans un nouvel onglet', jouer?.href.startsWith('https://dungeoncoop.0xbaba-eth.workers.dev') && jouer.target === '_blank' && jouer.textContent.includes('Jouer au camp'), jouer?.outerHTML);
+  verifier('Camp : le bouton mène au jeu en ligne, dans un nouvel onglet', jouer?.href.startsWith('https://dungeoncoop.0xbaba-eth.workers.dev') && jouer.target === '_blank' && jouer.textContent.includes('Aller au camp'), jouer?.outerHTML);
+  const icone = jouer?.querySelector('.icone-feu');
+  verifier('Camp : l’icône du feu s’affiche (32 x 32, pixels nets)', icone && icone.offsetWidth === 32 && icone.offsetHeight === 32 && getComputedStyle(icone).backgroundImage.includes('bouton_camp.png'), icone?.outerHTML);
 
   const enErreur = $$('.carte[data-etat="erreur"]').map((c) => `${c.id} : ${c.textContent}`);
   verifier('aucun widget en erreur', !enErreur.length, enErreur.join(' | '));
