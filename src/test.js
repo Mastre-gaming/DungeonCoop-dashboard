@@ -251,6 +251,24 @@ export async function lancerTests({ simuler, etat }) {
   verifier('Travail : « + Carte » crée une issue dans l’axe de la colonne', await attendre(() => cartes('axe: histoire').includes(39)), cartes('axe: histoire'));
   verifier('Travail : un titre tapé reste du texte', !$('#travail i') && texte('#travail').includes('<i>camp</i>'));
 
+  // L'urgence (les labels « priorité: … ») et « Abandonner » (le supprimer du tableau : fermée non prévue, hors du tableau)
+  const urgence = $('#travail .carte-travail[data-numero="39"] select.choix-urgence');
+  if (urgence) {
+    urgence.value = 'haute';
+    urgence.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  verifier('Travail : choisir l’urgence d’une carte (« urgence élevée » : le label « priorité: haute »)',
+    await attendre(() => texte('#travail .carte-travail[data-numero="39"] .prio') === 'urgence élevée'), texte('#travail .carte-travail[data-numero="39"] .meta'));
+  const confirmer = window.confirm;
+  window.confirm = () => true;
+  surCarte(39, 'abandonner')?.click();
+  window.confirm = confirmer;
+  verifier('Travail : « Abandonner » sort la carte du tableau (fermée non prévue, label « abandonnée »)',
+    await attendre(() => !numeros('#travail .carte-travail').includes(39)) && texte('#travail .message-travail').includes('#39 abandonnée'), texte('#travail .message-travail'));
+  await vueTravail('etat');
+  verifier('Travail : une carte abandonnée ne compte pas comme faite', !cartes('fait').includes(39), cartes('fait'));
+  await vueTravail('axe');
+
   // Le pseudo (connecté à GitHub par le tableau de travail, plus haut).
   const ouvrirProfil = () => $('#menu-profil').hidden && $('#bouton-profil').click();
   const changerPseudo = (nom) => {

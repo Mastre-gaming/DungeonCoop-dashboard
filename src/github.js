@@ -290,6 +290,7 @@ export async function ecrireDemo(methode, chemin, corps = {}) {
 
   if (corps.title != null) issue.title = corps.title;
   if (corps.labels) issue.labels = corps.labels.map((name) => ({ name }));
+  if (corps.state_reason !== undefined) issue.state_reason = corps.state_reason;
   if (corps.assignees) issue.assignees = corps.assignees.map(qui);
   if (corps.state && corps.state !== issue.state) {
     issue.state = corps.state;

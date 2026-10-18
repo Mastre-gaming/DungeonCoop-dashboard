@@ -715,7 +715,7 @@ body { padding-bottom: 72px; } /* la bulle ne cache jamais le bas de la page */
 .carte-travail .meta .qui .avatar { width: 18px; height: 18px; }
 .tag-encours { background: var(--accent-doux); color: var(--accent-texte); border-color: transparent; }
 .actions-carte { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
-.choix-axe { font-size: 0.8rem; padding: 2px 22px 2px 6px; border-radius: 7px; max-width: 100%; }
+.choix-axe, .choix-urgence { font-size: 0.8rem; padding: 2px 22px 2px 6px; border-radius: 7px; max-width: 100%; }
 
 .ajouter {
   width: 100%; font: inherit; font-size: 0.85rem; color: var(--texte-2); text-align: left;
