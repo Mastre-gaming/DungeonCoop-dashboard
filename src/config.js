@@ -33,6 +33,7 @@ export const config = {
   // Pour ajouter un axe : une ligne ici, et le même label dans le repo du jeu (Issues → Labels).
   prefixeAxe: 'axe:',
   axes: [
+    { label: 'axe: camp', nom: 'Le camp' },
     { label: 'axe: combats', nom: 'Combats' },
     { label: 'axe: classes', nom: 'Classes et personnages' },
     { label: 'axe: histoire', nom: 'Chapitres et histoire' },
