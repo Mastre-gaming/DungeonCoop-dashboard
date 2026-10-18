@@ -59,79 +59,79 @@
 ## Axe 1. Histoire et narration
 **Peut commencer tout de suite.** **L'histoire est celle de l'équipe** : personne ne la fait écrire par Claude.
 
-- [ ] **1.1 Valider le cadre.** Relire `STORY_STRUCTURE.fr.md` et dire oui, ou ce qu'il faut changer.
+- [ ] **1.1 Valider le cadre.** [#16](https://github.com/Mastre-gaming/DungeonCoop/issues/16) Relire `STORY_STRUCTURE.fr.md` et dire oui, ou ce qu'il faut changer.
   *Rend :* la réponse dans les questions ouvertes de `GAME_SPEC.md`. *Fini quand :* le cadre est accepté ou corrigé.
-- [ ] **1.2 Séance « monde » (1 h, toute l'équipe, en parallèle de D1).** Sur le Miro, chacun pose des post-it : le ton, le lieu, la menace (le Boss final), trois lieux de chapitre possibles. On tranche à la fin de la séance.
-- [ ] **1.3 Écrire la fiche du monde (D3).** Une page : le monde en 5 lignes, le Boss final, les lieux des 3 chapitres, et pour le chapitre 1 : son lieu, ses ennemis, ses 3 boss.
+- [ ] **1.2 Séance « monde » (1 h, toute l'équipe, en parallèle de D1).** [#17](https://github.com/Mastre-gaming/DungeonCoop/issues/17) Sur le Miro, chacun pose des post-it : le ton, le lieu, la menace (le Boss final), trois lieux de chapitre possibles. On tranche à la fin de la séance.
+- [ ] **1.3 Écrire la fiche du monde (D3).** [#18](https://github.com/Mastre-gaming/DungeonCoop/issues/18) Une page : le monde en 5 lignes, le Boss final, les lieux des 3 chapitres, et pour le chapitre 1 : son lieu, ses ennemis, ses 3 boss.
   *Fini quand :* le groupe dit oui à la page (c'est la condition de D3).
-- [ ] **1.4 Fixer les archétypes.** Garder ou renommer Combattant, Soutien, À distance, Mage. *Fini quand :* la liste est fermée dans `STORY_STRUCTURE.fr.md` §4 (l'axe 3 en a besoin).
-- [ ] **1.5 La chaîne du chapitre 1 (phase 2).** Une ouverture et 3 ou 4 maillons, chacun au format de `STORY_STRUCTURE.fr.md` §6 (4 lignes au plus, besoins, drapeaux posés, lignes de secours).
-- [ ] **1.6 Les événements d'ambiance du chapitre 1.** Il en faut 4. **Chaque ami en écrit un**, avec sa référence ou son easter egg, et un autre les relit.
-- [ ] **1.7 La salle d'entraînement.** Deux défis au tour par tour sur papier (par exemple « faire tomber trois mannequins du rebord en deux rounds »), testés à la fin d'une soirée papier.
+- [ ] **1.4 Fixer les archétypes.** [#19](https://github.com/Mastre-gaming/DungeonCoop/issues/19) Garder ou renommer Combattant, Soutien, À distance, Mage. *Fini quand :* la liste est fermée dans `STORY_STRUCTURE.fr.md` §4 (l'axe 3 en a besoin).
+- [ ] **1.5 La chaîne du chapitre 1 (phase 2).** [#20](https://github.com/Mastre-gaming/DungeonCoop/issues/20) Une ouverture et 3 ou 4 maillons, chacun au format de `STORY_STRUCTURE.fr.md` §6 (4 lignes au plus, besoins, drapeaux posés, lignes de secours).
+- [ ] **1.6 Les événements d'ambiance du chapitre 1.** [#21](https://github.com/Mastre-gaming/DungeonCoop/issues/21) [#22](https://github.com/Mastre-gaming/DungeonCoop/issues/22) [#23](https://github.com/Mastre-gaming/DungeonCoop/issues/23) [#24](https://github.com/Mastre-gaming/DungeonCoop/issues/24) Il en faut 4. **Chaque ami en écrit un**, avec sa référence ou son easter egg, et un autre les relit.
+- [ ] **1.7 La salle d'entraînement.** [#14](https://github.com/Mastre-gaming/DungeonCoop/issues/14) Deux défis au tour par tour sur papier (par exemple « faire tomber trois mannequins du rebord en deux rounds »), testés à la fin d'une soirée papier.
 - [ ] **Plus tard (M4) :** le camp, le journal, l'épilogue.
 
 ## Axe 2. Combat et combos (le focus du jeu)
 **Dès maintenant.** Toute l'équipe joue et note.
 
-- [ ] **2.1 Jouer D1** avec `PAPER_FIGHT_KIT.fr.md` : un combat en ordre d'initiative, un en tour d'équipe. On remplit la fiche de mesure **pendant** la partie.
-- [ ] **2.2 Trancher, le lendemain.** Le mode de tour, les PV, la durée d'un combat, d'après la fiche. *Rend :* `FIGHT_RULES.md` et `CORE_LOOP.md` mis à jour. *Fini quand :* « fun à quatre » est noté (5/10 ou plus pour passer) et les trois questions ouvertes de D1 sont fermées dans `GAME_SPEC.md`.
-- [ ] **2.3 La grille des combos.** Sur le Miro, un tableau classe × classe : pour chaque paire, un combo « l'un prépare, l'autre exploite ». *Fini quand :* chacune des quatre classes choisies (axe 3) a au moins un combo avec une autre.
-- [ ] **2.4 Ce que montre l'aperçu d'un combo.** En une phrase par cas : avant de valider, le joueur voit quoi (dégâts doublés, case qui prend feu, ennemi poussé) ? *Rend :* une courte liste, transmise à l'axe 7.
-- [ ] **2.5 Deuxième combat sur papier** avec les quatre classes choisies et une salle de l'axe 5. On vérifie : un combo possible dès le premier round, et personne ne porte les autres.
+- [ ] **2.1 Jouer D1** [#25](https://github.com/Mastre-gaming/DungeonCoop/issues/25) avec `PAPER_FIGHT_KIT.fr.md` : un combat en ordre d'initiative, un en tour d'équipe. On remplit la fiche de mesure **pendant** la partie.
+- [ ] **2.2 Trancher, le lendemain.** [#26](https://github.com/Mastre-gaming/DungeonCoop/issues/26) Le mode de tour, les PV, la durée d'un combat, d'après la fiche. *Rend :* `FIGHT_RULES.md` et `CORE_LOOP.md` mis à jour. *Fini quand :* « fun à quatre » est noté (5/10 ou plus pour passer) et les trois questions ouvertes de D1 sont fermées dans `GAME_SPEC.md`.
+- [ ] **2.3 La grille des combos.** [#27](https://github.com/Mastre-gaming/DungeonCoop/issues/27) Sur le Miro, un tableau classe × classe : pour chaque paire, un combo « l'un prépare, l'autre exploite ». *Fini quand :* chacune des quatre classes choisies (axe 3) a au moins un combo avec une autre.
+- [ ] **2.4 Ce que montre l'aperçu d'un combo.** [#28](https://github.com/Mastre-gaming/DungeonCoop/issues/28) En une phrase par cas : avant de valider, le joueur voit quoi (dégâts doublés, case qui prend feu, ennemi poussé) ? *Rend :* une courte liste, transmise à l'axe 7.
+- [ ] **2.5 Deuxième combat sur papier** [#29](https://github.com/Mastre-gaming/DungeonCoop/issues/29) avec les quatre classes choisies et une salle de l'axe 5. On vérifie : un combo possible dès le premier round, et personne ne porte les autres.
 - [ ] **2.6 M2 et M3 (code).** Claude construit les dés, les tours et les combos ; l'équipe joue sur le lien en ligne et note sur 10. *Fini quand :* les quatre gagnent le boss avec un combo montré avant d'être joué (le 9/10 du focus).
 
 ## Axe 3. Classes et personnages
 **Commence après D1** : les PV et le rythme des tours changent les chiffres des classes.
 
-- [ ] **3.1 Chaque ami crée une classe** avec `CLASS_TEMPLATE.fr.md`, même sans coder. Chaque fiche a un **crochet de combo** vers une autre classe.
-- [ ] **3.2 Vérifier le budget de chaque fiche** : 27 points de caractéristiques, 10 points de classe, 3 capacités dont une attaque de base, une vraie faiblesse.
-- [ ] **3.3 Le groupe choisit les quatre premières** (D2) : un rôle chacune (tank, dégâts, soutien, contrôle), et des archétypes variés. *Fini quand :* quatre fiches dans le budget, chacune avec son combo.
-- [ ] **3.4 Les tester** dans le deuxième combat sur papier (2.5), puis corriger les chiffres.
-- [ ] **3.5 L'apparence de chaque héros.** Chaque joueur décrit son héros et envoie son lien du générateur LPC à l'axe 6.
+- [ ] **3.1 Chaque ami crée une classe** [#30](https://github.com/Mastre-gaming/DungeonCoop/issues/30) [#31](https://github.com/Mastre-gaming/DungeonCoop/issues/31) [#32](https://github.com/Mastre-gaming/DungeonCoop/issues/32) [#33](https://github.com/Mastre-gaming/DungeonCoop/issues/33) avec `CLASS_TEMPLATE.fr.md`, même sans coder. Chaque fiche a un **crochet de combo** vers une autre classe.
+- [ ] **3.2 Vérifier le budget de chaque fiche** [#34](https://github.com/Mastre-gaming/DungeonCoop/issues/34) : 27 points de caractéristiques, 10 points de classe, 3 capacités dont une attaque de base, une vraie faiblesse.
+- [ ] **3.3 Le groupe choisit les quatre premières** [#35](https://github.com/Mastre-gaming/DungeonCoop/issues/35) (D2) : un rôle chacune (tank, dégâts, soutien, contrôle), et des archétypes variés. *Fini quand :* quatre fiches dans le budget, chacune avec son combo.
+- [ ] **3.4 Les tester** [#36](https://github.com/Mastre-gaming/DungeonCoop/issues/36) dans le deuxième combat sur papier (2.5), puis corriger les chiffres.
+- [ ] **3.5 L'apparence de chaque héros.** [#37](https://github.com/Mastre-gaming/DungeonCoop/issues/37) [#38](https://github.com/Mastre-gaming/DungeonCoop/issues/38) [#39](https://github.com/Mastre-gaming/DungeonCoop/issues/39) [#40](https://github.com/Mastre-gaming/DungeonCoop/issues/40) Chaque joueur décrit son héros et envoie son lien du générateur LPC à l'axe 6.
 - [ ] **Plus tard :** les sous-classes du niveau 3 et la table des niveaux.
 
 ## Axe 4. Structure des runs
 **Commence après D1.**
 
-- [ ] **4.1 Recompter la run avec la vraie durée d'un combat.** Si un combat dure 7 minutes, on garde 9 salles ; s'il dure plus, on descend vers 6. *Rend :* `LEVEL_STRUCTURE.md` mis à jour.
-- [ ] **4.2 Trancher la progression** : qu'est-ce qui reste d'une run à l'autre, et qu'est-ce qui repart à zéro (la tension 2 de `CORE_LOOP.md`). *Rend :* une proposition, que le groupe tranche.
-- [ ] **4.3 La liste des récompenses du chapitre 1.** Une quinzaine : nouvelles capacités, améliorations, équipement à looter. Avec les prix de la boutique.
-- [ ] **4.4 Une run sur papier, en accéléré.** Tirer les salles, résoudre les combats en gros, faire le jet de défaite une fois. *Fini quand :* on sait si la run tient en environ 65 minutes.
+- [ ] **4.1 Recompter la run avec la vraie durée d'un combat.** [#41](https://github.com/Mastre-gaming/DungeonCoop/issues/41) Si un combat dure 7 minutes, on garde 9 salles ; s'il dure plus, on descend vers 6. *Rend :* `LEVEL_STRUCTURE.md` mis à jour.
+- [ ] **4.2 Trancher la progression** [#42](https://github.com/Mastre-gaming/DungeonCoop/issues/42) : qu'est-ce qui reste d'une run à l'autre, et qu'est-ce qui repart à zéro (la tension 2 de `CORE_LOOP.md`). *Rend :* une proposition, que le groupe tranche.
+- [ ] **4.3 La liste des récompenses du chapitre 1.** [#43](https://github.com/Mastre-gaming/DungeonCoop/issues/43) Une quinzaine : nouvelles capacités, améliorations, équipement à looter. Avec les prix de la boutique.
+- [ ] **4.4 Une run sur papier, en accéléré.** [#44](https://github.com/Mastre-gaming/DungeonCoop/issues/44) Tirer les salles, résoudre les combats en gros, faire le jet de défaite une fois. *Fini quand :* on sait si la run tient en environ 65 minutes.
 - [ ] **4.5 M4 (code).** *Fini quand :* trois runs du même chapitre ne se ressemblent pas.
 
 ## Axe 5. Level design
 **Commence après D1.**
 
-- [ ] **5.1 Revoir la salle du kit** (10 × 8 cases) d'après ce qui a ennuyé ou plu pendant D1.
-- [ ] **5.2 Les règles d'une salle de combat.** Chaque salle offre au moins une préparation de combo dans le décor (tonneau d'huile, flaque, rebord, glace). *Rend :* une demi-page, ajoutée à `LEVEL_STRUCTURE.md`.
-- [ ] **5.3 Dessiner les salles de combat du chapitre 1** sur papier quadrillé ou sur le Miro. Commencer par 3, puis aller jusqu'à 8 (la réserve d'un chapitre).
-- [ ] **5.4 Les groupes d'ennemis du chapitre 1.** Huit groupes, avec les habitudes de `FIGHT_RULES.md` et les ennemis de la fiche du monde (axe 1).
-- [ ] **5.5 Trois énigmes ou pièges** sur papier.
-- [ ] **5.6 Tester deux salles** dans le deuxième combat sur papier (2.5).
+- [ ] **5.1 Revoir la salle du kit** [#45](https://github.com/Mastre-gaming/DungeonCoop/issues/45) (10 × 8 cases) d'après ce qui a ennuyé ou plu pendant D1.
+- [ ] **5.2 Les règles d'une salle de combat.** [#46](https://github.com/Mastre-gaming/DungeonCoop/issues/46) Chaque salle offre au moins une préparation de combo dans le décor (tonneau d'huile, flaque, rebord, glace). *Rend :* une demi-page, ajoutée à `LEVEL_STRUCTURE.md`.
+- [ ] **5.3 Dessiner les salles de combat du chapitre 1** [#47](https://github.com/Mastre-gaming/DungeonCoop/issues/47) sur papier quadrillé ou sur le Miro. Commencer par 3, puis aller jusqu'à 8 (la réserve d'un chapitre).
+- [ ] **5.4 Les groupes d'ennemis du chapitre 1.** [#48](https://github.com/Mastre-gaming/DungeonCoop/issues/48) Huit groupes, avec les habitudes de `FIGHT_RULES.md` et les ennemis de la fiche du monde (axe 1).
+- [ ] **5.5 Trois énigmes ou pièges** [#49](https://github.com/Mastre-gaming/DungeonCoop/issues/49) sur papier.
+- [ ] **5.6 Tester deux salles** [#50](https://github.com/Mastre-gaming/DungeonCoop/issues/50) dans le deuxième combat sur papier (2.5).
 
 ## Axe 6. Direction artistique
 **Peut commencer tout de suite.**
 
-- [ ] **6.1 Un moodboard sur le Miro** : une dizaine d'images (couleurs, ambiance, exemples LPC). À recaler sur la fiche du monde quand elle sort.
-- [ ] **6.2 Le premier sprite (D4).** Un héros fait dans le générateur LPC, retouché dans Sprite Painter. *Fini quand :* le propriétaire lui donne 7/10 ou plus. Le critère : la classe et l'équipement se lisent à la taille du jeu.
-- [ ] **6.3 Les quatre héros** à partir des liens envoyés en 3.5.
-- [ ] **6.4 Le jeu de tuiles.** Choisir un pack LPC sur OpenGameArt, vérifier sa licence, l'inscrire dans les crédits.
-- [ ] **6.5 La liste des effets visuels des combos** : les quatre surfaces (huile, eau, feu, glace) et les icônes d'état (Trempé, Huilé, En feu, Gelé, À terre). Pour M3.
+- [ ] **6.1 Un moodboard sur le Miro** [#51](https://github.com/Mastre-gaming/DungeonCoop/issues/51) : une dizaine d'images (couleurs, ambiance, exemples LPC). À recaler sur la fiche du monde quand elle sort.
+- [ ] **6.2 Le premier sprite (D4).** [#52](https://github.com/Mastre-gaming/DungeonCoop/issues/52) Un héros fait dans le générateur LPC, retouché dans Sprite Painter. *Fini quand :* le propriétaire lui donne 7/10 ou plus. Le critère : la classe et l'équipement se lisent à la taille du jeu.
+- [ ] **6.3 Les quatre héros** [#53](https://github.com/Mastre-gaming/DungeonCoop/issues/53) à partir des liens envoyés en 3.5.
+- [ ] **6.4 Le jeu de tuiles.** [#54](https://github.com/Mastre-gaming/DungeonCoop/issues/54) Choisir un pack LPC sur OpenGameArt, vérifier sa licence, l'inscrire dans les crédits.
+- [ ] **6.5 La liste des effets visuels des combos** [#55](https://github.com/Mastre-gaming/DungeonCoop/issues/55) : les quatre surfaces (huile, eau, feu, glace) et les icônes d'état (Trempé, Huilé, En feu, Gelé, À terre). Pour M3.
 - [ ] **Toujours :** chaque pièce LPC garde sa licence ; les crédits viennent de l'export du générateur.
 
 ## Axe 7. Interface et UX
 **Commence après D1.**
 
-- [ ] **7.1 La liste des écrans** : titre, héberger ou rejoindre, choix du héros, combat, carte de la run, récompense, vote, crédits (et plus tard le camp et le journal).
-- [ ] **7.2 La maquette de l'écran de combat**, sur papier ou sur le Miro : la barre d'initiative, la chance de toucher au survol, l'aperçu du combo (liste de 2.4), à qui c'est le tour. Référence : Baldur's Gate 3.
-- [ ] **7.3 La tester pendant le deuxième combat sur papier.** On demande aux joueurs ce qu'il leur manquait pour décider.
-- [ ] **7.4 Le style** : police pixel, couleurs prises du moodboard (axe 6).
+- [ ] **7.1 La liste des écrans** [#56](https://github.com/Mastre-gaming/DungeonCoop/issues/56) : titre, héberger ou rejoindre, choix du héros, combat, carte de la run, récompense, vote, crédits (et plus tard le camp et le journal).
+- [ ] **7.2 La maquette de l'écran de combat** [#57](https://github.com/Mastre-gaming/DungeonCoop/issues/57), sur papier ou sur le Miro : la barre d'initiative, la chance de toucher au survol, l'aperçu du combo (liste de 2.4), à qui c'est le tour. Référence : Baldur's Gate 3.
+- [ ] **7.3 La tester pendant le deuxième combat sur papier.** [#58](https://github.com/Mastre-gaming/DungeonCoop/issues/58) On demande aux joueurs ce qu'il leur manquait pour décider.
+- [ ] **7.4 Le style** [#59](https://github.com/Mastre-gaming/DungeonCoop/issues/59) : police pixel, couleurs prises du moodboard (axe 6).
 - [ ] **7.5 M1 et M2 (code).** *Fini quand :* « lire un combat » est noté 6/10 ou plus.
 
 ## Axe 8. Son et musique
 **En dernier**, avec un budget fixé à ce moment-là.
 
-- [ ] **8.1 Avant M3 : seulement des références.** Une playlist de 5 morceaux qui collent au monde, rangée dans le parking.
+- [ ] **8.1 Avant M3 : seulement des références.** [#60](https://github.com/Mastre-gaming/DungeonCoop/issues/60) Une playlist de 5 morceaux qui collent au monde, rangée dans le parking.
 - [ ] **8.2 Après M3 : les bruitages d'abord**, en partant des combos (feu, foudre, glace, poussée, coup critique).
 - [ ] **8.3 Puis la musique**, une par lieu si l'équipe le veut.
 
