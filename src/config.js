@@ -10,6 +10,9 @@ export const config = {
   depots: ['DungeonCoop', 'DungeonCoop-dashboard'],
   nomsCourts: { DungeonCoop: 'jeu', 'DungeonCoop-dashboard': 'dashboard' },
 
+  // Le jeu en ligne (le camp) : le bouton « Jouer » de l'en-tête y mène.
+  jeuEnLigne: 'https://dungeoncoop.0xbaba-eth.workers.dev',
+
   // L'adresse du Worker « en direct » (dossier worker/), sans / à la fin.
   // Vide : la page lit GitHub elle-même, à jour à chaque ouverture mais sans mise à jour en direct.
   // Pour essayer une autre adresse sans toucher ce fichier : ?direct=http://localhost:8787
