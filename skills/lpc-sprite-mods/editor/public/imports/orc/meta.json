@@ -1,0 +1,12 @@
+{
+  "id": "orc",
+  "name": "Orc",
+  "link": "https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/#sex=male&body=Body_Color_green&head=Orc_male_green&clothes=TShirt_brown&legs=Pants_brown&shoes=Basic_Boots_brown&weapon=Waraxe_waraxe",
+  "anchor": "head",
+  "width": 1152,
+  "height": 4224,
+  "custom": [
+    "slash_oversize"
+  ],
+  "imported": "2026-10-17T16:26:11.429Z"
+}

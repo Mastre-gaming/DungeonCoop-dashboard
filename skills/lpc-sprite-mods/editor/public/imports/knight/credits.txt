@@ -1,0 +1,105 @@
+Character: Knight
+Made with the Universal LPC Spritesheet Character Generator: https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/#sex=male&body=Body_Color_light&head=Human_Male_light&expression=Neutral_light&armour=Plate_steel&legs=Armour_steel&shoes=Armour_steel&arms=Armour_steel&gloves=Gloves_steel&hat=Greathelm_steel&cape=Solid_red&weapon=Arming_Sword_steel&shield=Crusader_shield_crusader
+
+Credits & Attribution
+
+You must credit the authors of this artwork. Detailed attribution instructions
+
+License information for all spritesheets in this generator is available here
+
+body/bodies/male/walk.png
+
+see details at https://opengameart.org/content/lpc-character-bases; 'Thick' Male Revised Run/Climb by JaidynReiman (based on ElizaWy's LPC Revised)
+
+Licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+
+Authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+
+head/heads/human/male/walk.png
+
+original head by Redshrike, tweaks by BenCreating, modular version by bluecarrot16
+
+Licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+
+Authors: bluecarrot16, Benjamin K. Smith (BenCreating), Stephen Challener (Redshrike)
+
+head/faces/male/neutral/walk.png
+
+Original by Redshrike, Expressions by ElizaWy, mapped to all frames by JaidynReiman
+
+Licenses: OGA-BY 3.0
+
+Authors: JaidynReiman, ElizaWy, Stephen Challener (Redshrike)
+
+torso/armour/plate/male/walk.png
+
+original by wulax, recolor by bigbeargames, color reduced to 7 colors and adapted to v3 bases by bluecarrot16, run/jump/sit/climb/revised combat by JaidynReiman, reduced colors to 6 (based on Napsio's Vitruvian)
+
+Licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+
+Authors: Napsio (Vitruvian Studio), JaidynReiman, bluecarrot16, Michael Whitlock (bigbeargames), Johannes Sjölund (wulax)
+
+legs/armour/plate/male/walk.png
+
+reduced to 7 colors an adapted to v3 bases by bluecarrot16, climb/jump/sit/emote/run by JaidynReiman
+
+Licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+
+Authors: bluecarrot16, JaidynReiman, Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax)
+
+feet/armour/plate/male/walk.png
+
+original by wulax, recolors by bigbeargames, edits for v3 base and recolors by bluecarrot16
+
+Licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+
+Authors: Matthew Krohn (makrohn), Johannes Sjölund (wulax)
+
+arms/armour/plate/male/walk.png
+
+original by wulax, recolors by bigbeargames; adapted to v3 bases and further recolors by bluecarrot16, climb/emote/jump by JaidynReiman
+
+Licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+
+Authors: Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+
+arms/hands/gloves/male/walk.png
+
+metal gloves by wulax, recolors by bigbeargames, adapted to v3 bases by bluecarrot16, added to expanded animations by JaidynReiman
+
+Licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+
+Authors: Michael Whitlock (bigbeargames), Matthew Krohn (makrohn), Johannes Sjölund (wulax), bluecarrot16, JaidynReiman
+
+hat/helmet/greathelm/male/walk.png
+
+Licenses: OGA-BY 3.0, CC-BY 3.0, CC-BY 4.0, GPL 2.0, GPL 3.0
+
+Authors: bluecarrot16
+
+cape/solid/fg/walk.png
+
+Licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+
+Authors: bluecarrot16, JaidynReiman
+
+cape/solid/bg/walk.png
+
+Licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+
+Authors: Nila122, JaidynReiman
+
+weapon/sword/arming/universal/fg/walk/steel.png
+
+Licenses: OGA-BY 3.0
+
+Authors: ElizaWy; walk and down by JaidynReiman
+
+shield/crusader/bg/walk/crusader.png
+
+Licenses: OGA-BY 3.0
+
+Authors: bluecarrot16, Sander Frenken (castelonia)
+
+Download TXT
+Download CSV

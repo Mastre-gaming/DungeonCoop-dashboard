@@ -1,0 +1,12 @@
+[
+  {
+    "id": "knight",
+    "name": "Knight",
+    "anchor": "hat"
+  },
+  {
+    "id": "orc",
+    "name": "Orc",
+    "anchor": "head"
+  }
+]

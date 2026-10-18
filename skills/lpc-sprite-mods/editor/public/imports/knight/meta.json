@@ -1,0 +1,14 @@
+{
+  "id": "knight",
+  "name": "Knight",
+  "link": "https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/#sex=male&body=Body_Color_light&head=Human_Male_light&expression=Neutral_light&armour=Plate_steel&legs=Armour_steel&shoes=Armour_steel&arms=Armour_steel&gloves=Gloves_steel&hat=Greathelm_steel&cape=Solid_red&weapon=Arming_Sword_steel&shield=Crusader_shield_crusader",
+  "anchor": "hat",
+  "width": 1664,
+  "height": 4992,
+  "custom": [
+    "slash_128",
+    "backslash_128",
+    "halfslash_128"
+  ],
+  "imported": "2026-10-17T16:20:07.701Z"
+}

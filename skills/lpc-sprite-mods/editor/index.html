@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sprite Painter</title>
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+  <header>
+    <h1>Sprite Painter <small>LPC mods</small></h1>
+    <label class="field">Character <select id="character"></select></label>
+    <button id="import" class="primary">Import from LPC generator…</button>
+    <span class="spacer"></span>
+    <span id="stamp"></span>
+  </header>
+
+  <aside id="side">
+    <section>
+      <h2>Tools</h2>
+      <div class="row tools">
+        <button data-tool="pencil" title="Pencil (B)">✎ Pencil</button>
+        <button data-tool="eraser" title="Eraser (E)">⌫ Eraser</button>
+        <button data-tool="picker" title="Pick a colour from the frame (I)">◎ Pick</button>
+      </div>
+      <div class="row">
+        <button id="mirror" title="Paint both sides of the anchor part at once (M)">⇋ Mirror</button>
+        <button id="grid" class="on" title="Pixel grid (G)">▦ Grid</button>
+        <button id="fit" title="Fit the frame (F)">⤢ Fit</button>
+      </div>
+      <div class="row">
+        <button id="undo" title="Undo (Ctrl+Z)">↶ Undo</button>
+        <button id="redo" title="Redo (Ctrl+Y)">↷ Redo</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Colour <input type="color" id="color"></h2>
+      <div id="swatches"></div>
+    </section>
+
+    <section class="grow">
+      <h2>Layers <span class="hint">top draws last</span></h2>
+      <ul id="layers"></ul>
+      <div class="row">
+        <button id="layer-add" title="New layer">＋</button>
+        <button id="layer-del" title="Delete layer">－</button>
+        <button id="layer-up" title="Move up">▲</button>
+        <button id="layer-down" title="Move down">▼</button>
+      </div>
+      <p class="hint">Arrow keys nudge the layer for this facing.</p>
+    </section>
+
+    <section>
+      <h2>Mod</h2>
+      <div class="row wrap">
+        <button id="preset" title="Add the horns and blue plume example">Example: horns &amp; plume</button>
+        <button id="clear-mod">Clear</button>
+        <button id="save-mod">Save mod…</button>
+        <button id="load-mod">Load mod…</button>
+        <input type="file" id="load-file" accept=".json" hidden>
+      </div>
+      <div class="row wrap">
+        <button id="export-png" class="primary">Export sheet PNG</button>
+        <button id="export-credits">Credits</button>
+      </div>
+    </section>
+  </aside>
+
+  <main id="stage">
+    <div id="facings" class="overlay">
+      <button data-dir="north" title="1">Back</button>
+      <button data-dir="west" title="2">Left</button>
+      <button data-dir="south" title="3">Front</button>
+      <button data-dir="east" title="4">Right</button>
+      <button id="copy-facing" title="Copy this facing's layer to the opposite one (left↔right mirrored)">Copy to opposite</button>
+    </div>
+    <div id="framebar" class="overlay">
+      <input type="range" id="frame" min="0" max="8" value="0">
+      <span id="frame-label"></span>
+      <span id="anchor-info" class="hint"></span>
+    </div>
+    <div id="preview-head" class="overlay">
+      <select id="anim"></select>
+      <button id="play" title="Play / pause">❚❚</button>
+      <input type="range" id="fps" min="2" max="16" value="8" title="Speed">
+    </div>
+    <div id="preview-labels"><span></span><span></span><span></span><span></span></div>
+    <div id="status"></div>
+  </main>
+
+  <dialog id="import-dialog">
+    <form method="dialog">
+      <h2>Import from the LPC generator</h2>
+      <p>Design a character on the <a href="https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/" target="_blank" rel="noopener">Universal LPC Spritesheet Character Generator</a>, then copy the whole address from the address bar and paste it here.</p>
+      <label>Generator link <input id="import-link" placeholder="https://liberatedpixelcup.github.io/…#sex=male&amp;body=…" autocomplete="off"></label>
+      <label>Track this part <select id="import-anchor"></select> <span class="hint">your paint follows it (a hat or the head works best)</span></label>
+      <label>Name <input id="import-name" placeholder="e.g. Orc chief"></label>
+      <p id="import-msg" class="hint"></p>
+      <div class="row end">
+        <button id="import-cancel">Cancel</button>
+        <button id="import-go" class="primary">Import</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
