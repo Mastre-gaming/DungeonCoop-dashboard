@@ -31,6 +31,13 @@ export function adresseSure(url) {
   }
 }
 
+// Le laissez-passer de l'entrée, ajouté à chaque lien vers le camp (main.js le pose dès que la session est lue) :
+// le camp parle à la même messagerie et en a besoin. Il passe dans le fragment (#jeton=…), qui ne va à aucun serveur.
+let jetonCamp = null;
+export const poserJetonCamp = (jeton) => { jetonCamp = jeton || null; };
+const sansBarre = (url) => String(url).replace(/\/+$/, '');
+export const versCamp = (url) => (jetonCamp && sansBarre(url) === sansBarre(config.jeuEnLigne) ? `${sansBarre(url)}#jeton=${encodeURIComponent(jetonCamp)}` : url);
+
 // Un lien qui ouvre GitHub (ou autre) dans un nouvel onglet.
 export function lienExterne(url, attributs, ...enfants) {
   return el('a', { ...attributs, href: url, target: '_blank', rel: 'noopener' }, ...enfants);
