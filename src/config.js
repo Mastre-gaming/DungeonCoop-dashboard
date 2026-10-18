@@ -27,6 +27,7 @@ export const config = {
 
   // Les labels (la casse et les accents ne comptent pas).
   labelIdee: 'idée',
+  labelAbandon: 'abandonnée', // une tâche abandonnée : fermée « non prévue », hors du tableau et des comptes
   prefixePriorite: 'priorité:', // priorité: haute / moyenne / basse
 
   // Le tableau de travail : une colonne par axe. Une tâche est rangée par son label « axe: … ».

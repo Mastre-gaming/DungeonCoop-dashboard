@@ -1,8 +1,10 @@
 // Le tableau de travail : les tâches du jeu en colonnes, par axe (combats, histoire, pixel art…) ou par état
 // (à faire, en cours, fait). Une carte = une issue du jeu ; une idée y entre quand quelqu'un la prend.
 // Connecté avec GitHub, on modifie depuis ici : glisser une carte, « Je prends », « Fait », changer d'axe,
-// créer une carte. Tout s'écrit dans GitHub (labels « axe: … », personnes assignées, issue fermée) :
-// la page ne garde rien, et l'historique reste sur GitHub.
+// l'urgence (élevée, moyenne, faible), abandonner une carte, créer une carte. Tout s'écrit dans GitHub (labels
+// « axe: … » et « priorité: … », personnes assignées, issue fermée) : la page ne garde rien, et l'historique reste sur GitHub.
+// Abandonner (le « supprimer » du tableau, demandé par Paul le 18 oct.) : la carte est fermée « non prévue », avec le
+// label « abandonnée » ; elle sort du tableau et ne compte pas comme faite. On peut la rouvrir sur GitHub.
 
 import { config, depotJeu, urlGithub } from '../config.js';
 import { api, modeDemo } from '../github.js';
@@ -18,6 +20,8 @@ const ETATS = [
   { id: 'fait', nom: 'Fait' },
 ];
 const PRIORITES = ['haute', 'moyenne', 'basse'];
+// L'urgence d'une carte : ce sont les labels « priorité: … » (le jeu et les idées les lisent aussi), dits autrement.
+const URGENCE = { haute: 'élevée', moyenne: 'moyenne', basse: 'faible' };
 
 let vue = lireVue();
 let message = null; // { niveau, texte, t } : le résultat de la dernière action, affiché quelques secondes
@@ -39,7 +43,9 @@ function changerVue(nouvelle, ctx) {
   ctx.redessiner();
 }
 
-const estTache = (issue) => !issue.pull_request && (!estIdee(issue) || issue.assignees?.length);
+const noms = (issue) => (issue.labels ?? []).map((l) => l.name ?? l);
+export const estAbandonnee = (issue) => issue.state === 'closed' && (issue.state_reason === 'not_planned' || aLeLabel(issue, config.labelAbandon));
+const estTache = (issue) => !issue.pull_request && (!estIdee(issue) || issue.assignees?.length) && !estAbandonnee(issue);
 const etatDe = (issue) => (issue.state === 'closed' ? 'fait' : issue.assignees?.length ? 'encours' : 'afaire');
 // Les axes : ceux de content/axes.json (le repo du jeu, le contrat avec le camp), sinon ceux de config.js.
 // « anciens » : d'autres labels rangés dans le même axe.
@@ -199,7 +205,7 @@ function carte(issue, outils) {
   const meta = el('div', { class: 'meta' },
     `#${issue.number}`,
     jalon ? el('span', { class: 'tag tag-jalon' }, jalon) : null,
-    priorite ? el('span', { class: `tag prio prio-${normaliser(priorite)}` }, priorite) : null,
+    priorite ? el('span', { class: `tag prio prio-${normaliser(priorite)}` }, `urgence ${URGENCE[normaliser(priorite)] ?? priorite}`) : null,
     vue === 'etat' && axe ? el('span', { class: 'tag' }, axe.nom) : null,
     vue === 'axe' && etat === 'encours' ? el('span', { class: 'tag tag-encours' }, 'en cours') : null,
     el('span', { class: 'qui' }, (issue.assignees ?? []).map((a) => el('span', { title: nomDe(a.login, ctx.equipe) }, avatar(a, 18)))));
@@ -225,12 +231,24 @@ function carte(issue, outils) {
     class: 'choix-axe', 'aria-label': `Axe de #${issue.number}`, dataset: { action: 'axe' },
     onchange: (e) => modifier(outils, issue, { labels: labelsAvecAxe(issue, e.target.value) }, `rangée dans « ${nomAxe(e.target.value)} »`),
   }, el('option', { value: '', selected: !axe }, 'Sans axe'), AXES.map((a) => el('option', { value: a.label, selected: a === axe }, a.nom)));
+  const prio = priorite ? normaliser(priorite) : '';
+  const choixUrgence = el('select', {
+    class: 'choix-urgence', 'aria-label': `Urgence de #${issue.number}`, dataset: { action: 'urgence' },
+    onchange: (e) => modifier(outils, issue, { labels: labelsAvecPriorite(issue, e.target.value) }, e.target.value ? `urgence ${URGENCE[e.target.value]}` : 'sans urgence'),
+  }, el('option', { value: '', selected: !prio }, 'Urgence ?'), PRIORITES.map((p) => el('option', { value: p, selected: p === prio }, `urgence ${URGENCE[p]}`)));
+  const abandonner = el('button', {
+    type: 'button', class: 'bouton discret petit abandonner', dataset: { action: 'abandonner' },
+    onclick: () => {
+      if (!window.confirm(`Abandonner #${issue.number} « ${issue.title} » ?\nElle sera fermée (non prévue) et sortira du tableau. On peut la rouvrir sur GitHub.`)) return;
+      modifier(outils, issue, { state: 'closed', state_reason: 'not_planned', labels: [...noms(issue).filter((n) => normaliser(n) !== normaliser(config.labelAbandon)), config.labelAbandon] }, 'abandonnée (rouvrable sur GitHub)');
+    },
+  }, 'Abandonner');
 
   li.append(el('div', { class: 'actions-carte' },
     ouverte && !estAMoi(issue, moi) ? action('prendre', 'Je prends', () => ({ assignees: [...logins(issue), moi] }), 'prise') : null,
     ouverte && estAMoi(issue, moi) ? action('lacher', 'Je lâche', () => ({ assignees: logins(issue).filter((l) => normaliser(l) !== normaliser(moi)) }), 'lâchée') : null,
     ouverte ? action('fait', 'Fait ✓', () => ({ state: 'closed', state_reason: 'completed' }), 'faite') : action('rouvrir', 'Rouvrir', () => ({ state: 'open' }), 'rouverte'),
-    choixAxe));
+    choixAxe, ouverte ? choixUrgence : null, ouverte ? abandonner : null));
   return li;
 }
 
@@ -239,6 +257,13 @@ const nomAxe = (label) => AXES.find((a) => a.label === label)?.nom ?? 'Sans axe'
 function labelsAvecAxe(issue, label) {
   const autres = (issue.labels ?? []).map((l) => l.name ?? l).filter((n) => !AXES.some((a) => labelsDe(a).some((l) => normaliser(l) === normaliser(n))));
   return label ? [...autres, label] : autres;
+}
+
+// Les labels d'une carte avec une autre urgence (« priorité: haute » ; '' : sans urgence).
+function labelsAvecPriorite(issue, p) {
+  const prefixe = normaliser(config.prefixePriorite).replace(/[:\s]+$/, '');
+  const autres = noms(issue).filter((n) => !normaliser(n).startsWith(prefixe));
+  return p ? [...autres, `${config.prefixePriorite} ${p}`] : autres;
 }
 
 // Ce que veut dire « poser la carte dans cette colonne ».
