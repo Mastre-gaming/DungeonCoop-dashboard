@@ -150,14 +150,22 @@ export async function session() {
 
 // --- Les pseudos des devs (worker/src/profils.js) ------------------------------------------
 
+const SANS_PSEUDOS = 'Le Worker en ligne ne connaît pas encore les pseudos : il faut le redéployer (npm run deploy dans worker/).';
+const INJOIGNABLE = 'Le Worker ne répond pas pour l’instant : réessaie dans un moment.';
+
+// Le Worker donne-t-il les pseudos ? Sinon, raison dit pourquoi (pas de Worker, pas redéployé, injoignable).
+export const pseudos = { disponibles: modeDemo, raison: modeDemo ? null : 'Les pseudos vivent dans le Worker direct, qui n’est pas branché ici.' };
+
 // [{ github, nom }] : le pseudo que chacun s'est choisi. [] sans Worker, ou s'il ne répond pas.
 export async function profils() {
   if (modeDemo) return structuredClone((await donneesDemo()).profils ?? []);
   if (!modeDirect) return [];
   try {
     const reponse = await fetch(`${adresseDirect}/profils`, { cache: 'no-store' });
+    Object.assign(pseudos, { disponibles: reponse.ok, raison: reponse.ok ? null : reponse.status === 404 ? SANS_PSEUDOS : INJOIGNABLE });
     return reponse.ok ? reponse.json() : [];
   } catch {
+    Object.assign(pseudos, { disponibles: false, raison: INJOIGNABLE });
     return [];
   }
 }
@@ -167,12 +175,19 @@ export async function profils() {
 export async function changerPseudo(nom, jeton, loginDemo) {
   if (modeDemo) return changerPseudoDemo(nom, loginDemo);
   if (!modeDirect) throw new Error('Les pseudos vivent dans le Worker direct, qui n’est pas branché ici.');
-  const reponse = await fetch(`${adresseDirect}/profil`, {
-    method: 'PUT',
-    cache: 'no-store',
-    headers: { Authorization: `Bearer ${jeton}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nom }),
-  });
+  let reponse;
+  try {
+    reponse = await fetch(`${adresseDirect}/profil`, {
+      method: 'PUT',
+      cache: 'no-store',
+      headers: { Authorization: `Bearer ${jeton}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nom }),
+    });
+  } catch {
+    // Un Worker d'avant les pseudos refuse le PUT dès le préflight : le navigateur ne dit que « Failed to fetch ».
+    throw new Error(pseudos.disponibles ? INJOIGNABLE : SANS_PSEUDOS);
+  }
+  if (reponse.status === 404) throw erreurHttp(SANS_PSEUDOS, 404);
   const donnees = await reponse.json().catch(() => ({}));
   if (!reponse.ok) throw erreurHttp(donnees.erreur ?? `Le Worker a répondu ${reponse.status}.`, reponse.status);
   return donnees.profils;

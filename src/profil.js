@@ -17,6 +17,7 @@ export function installerProfil({ lire, choisirMoi, apresConnexion, apresPseudo 
   zone.replaceChildren(bouton, menu);
   let disponible = false;
   let message = null; // { niveau: 'ok' | 'erreur', texte } : le résultat du dernier enregistrement
+  let brouillon = null; // le pseudo tapé, gardé dans le champ quand l'enregistrement échoue
 
   connexionDisponible().then((oui) => {
     disponible = oui;
@@ -38,7 +39,8 @@ export function installerProfil({ lire, choisirMoi, apresConnexion, apresPseudo 
     bouton.setAttribute('aria-expanded', String(oui));
     if (!oui) return;
     message = null;
-    dessiner();
+    brouillon = null;
+    dessiner({ menuAussi: true }); // le menu vient de s'ouvrir : on le refait à neuf
     placer();
     menu.querySelector('input:not([disabled])')?.focus();
   }
@@ -79,10 +81,12 @@ export function installerProfil({ lire, choisirMoi, apresConnexion, apresPseudo 
     const membre = compte && equipe.find((m) => normaliser(m.github) === normaliser(compte.login));
     const actuel = membre ? nomDe(membre.github, equipe) : '';
     const nomEquipe = membre ? (membre.nomEquipe ?? membre.nom) || membre.github : '';
-    const champ = el('input', { type: 'text', id: 'champ-pseudo', name: 'pseudo', maxlength: '40', autocomplete: 'nickname', spellcheck: 'false', value: actuel, disabled: !membre, placeholder: nomEquipe });
-    const envoi = el('button', { type: 'submit', class: 'bouton', disabled: !membre }, 'Enregistrer');
+    const modifiable = Boolean(membre) && github.pseudos.disponibles;
+    const champ = el('input', { type: 'text', id: 'champ-pseudo', name: 'pseudo', maxlength: '40', autocomplete: 'nickname', spellcheck: 'false', value: brouillon ?? actuel, disabled: !modifiable, placeholder: nomEquipe });
+    const envoi = el('button', { type: 'submit', class: 'bouton', disabled: !modifiable }, 'Enregistrer');
     const aide = !compte ? 'Connecte-toi avec GitHub pour le changer : c’est ce qui prouve que c’est toi.'
       : !membre ? `@${compte.login} n’est pas dans equipe.json : demande à l’équipe de t’y ajouter.`
+      : !github.pseudos.disponibles ? github.pseudos.raison
       : `Ton nom pour toute l’équipe. Vide : « ${nomEquipe} », le nom d’equipe.json.`;
     const formulaire = el('form', { class: 'profil-pseudo' },
       el('label', { for: 'champ-pseudo' }, 'Ton pseudo de dev'),
@@ -97,9 +101,11 @@ export function installerProfil({ lire, choisirMoi, apresConnexion, apresPseudo 
       try {
         const profils = await github.changerPseudo(nom, session.jeton, compte.login);
         message = { niveau: 'ok', texte: nom ? `C’est fait : tu es « ${nom} » pour toute l’équipe.` : `C’est fait : tu reprends « ${nomEquipe} ».` };
+        brouillon = null;
         apresPseudo(profils);
       } catch (erreur) {
         message = { niveau: 'erreur', texte: erreur.message };
+        brouillon = champ.value; // ce qu'on a tapé reste là, pour corriger ou réessayer
       }
       dessiner({ menuAussi: true });
       menu.querySelector('#champ-pseudo')?.focus();
