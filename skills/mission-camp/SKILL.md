@@ -78,8 +78,18 @@ git push -u origin <prenom>/<sujet-court>
 gh pr create -R Mastre-gaming/DungeonCoop --label "axe: camp" \
   --title "Le feu de camp : taille 1" --body "Ferme #<n>
 
+## Patch note
+Oyez ! (le petit mot pour les joueurs, voir plus bas)
+
+![Le feu de camp](https://raw.githubusercontent.com/Mastre-gaming/DungeonCoop/main/docs/patch-notes/<n>-feu.png)
+
 (le reste du modèle de PR : ce que ça change, le chemin dans l'aperçu, la capture)"
 ```
+- **La section `## Patch note` est obligatoire** : c'est le petit mot que le crieur du camp lit aux joueurs (un clic sur lui ouvre les « Patch notes » ; seule cette section y apparaît). Écris-la avec la personne, et fais-la-lui relire :
+  - 2 à 5 phrases sur ce qu'un joueur verra ou ressentira en jouant, pour quelqu'un qui n'a jamais ouvert le code ;
+  - **un ton comique**, celui d'un crieur de village (« Oyez ! … »), avec une petite blague ; mais tout y est vrai ;
+  - **aucun code ni rien de technique** : pas de nom de fichier, de fonction, de branche ou d'outil, pas de « module », « test », « CSS », « PR », « refactor »… Une PR purement technique dit ce que le joueur y gagne (« le camp ne rame plus quand on est quatre »), ou en rit (« rien ne change à l'œil nu, mais les lutins de la machinerie dorment mieux ») ;
+  - **une ou deux photos du jeu si possible** : une capture de ce qui change (les outils de captures du repo, `npm run shots`, ou `tools/captures.mjs`). Pour qu'elle s'affiche dans le jeu, commite-la dans `docs/patch-notes/<n>-<sujet>.png` (moins de 300 Ko, 1200 px de large au plus) et mets son lien `https://raw.githubusercontent.com/Mastre-gaming/DungeonCoop/main/docs/patch-notes/<n>-<sujet>.png` : il marche dès la fusion. La personne peut aussi glisser l'image dans la PR sur GitHub.
 - **Le label `axe: …` est obligatoire sur la PR** (le même que la mission) : sans lui, la vérification « axe » reste rouge.
 - La PR est fusionnée quand ses vérifications sont vertes et qu'elle est relue. La fusion ferme la mission : elle est rendue.
 - Ne fusionne pas toi-même sans l'accord de la personne.
